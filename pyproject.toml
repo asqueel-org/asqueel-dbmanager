@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "asqueel-dbmanager"
+version = "0.1.0"
+description = "Kajenn application for database migrations, backups and restores"
+requires-python = ">=3.11"
+readme = "README.md"
+license = "Apache-2.0"
+dependencies = [
+    "asqueel-migration[validation]>=0.2.0,<0.3.0",
+    "kajenn>=0.1.0,<0.2.0",
+    "genro-routes>=0.30.0",
+]
+
+[project.optional-dependencies]
+postgresql = ["asqueel-migration[postgresql]>=0.2.0,<0.3.0"]
+dev = ["pytest>=7", "ruff", "testing.postgresql", "build"]
+
+[project.scripts]
+asqueel-dbmanager = "asqueel_dbmanager.__main__:main"
+
+[project.urls]
+Repository = "https://github.com/asqueel-org/asqueel-dbmanager"
+Issues = "https://github.com/asqueel-org/asqueel-dbmanager/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/asqueel_dbmanager"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/tests", "/README.md", "/LICENSE", "/NOTICE", "/pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["postgresql: requires a PostgreSQL server and client tools"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
