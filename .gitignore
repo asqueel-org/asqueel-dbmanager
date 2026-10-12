@@ -8,3 +8,4 @@ dist/
 .dbmanager/
 tasks/
 connections.json
+docs/_build/
