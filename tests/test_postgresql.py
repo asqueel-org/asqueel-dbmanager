@@ -39,6 +39,19 @@ def databases(pg):
             yield [dict(pg, dbname=name) for name in names]
         finally:
             for name in names:
+                with psycopg.connect(**dict(pg, dbname=name), autocommit=True) as conn:
+                    subscriptions = conn.execute(
+                        'SELECT subname FROM pg_subscription WHERE subdbid = '
+                        '(SELECT oid FROM pg_database WHERE datname = current_database())'
+                    ).fetchall()
+                    for (subscription,) in subscriptions:
+                        conn.execute(sql.SQL('ALTER SUBSCRIPTION {} DISABLE').format(
+                            sql.Identifier(subscription),
+                        ))
+                        conn.execute(sql.SQL('ALTER SUBSCRIPTION {} SET (slot_name = NONE)').format(
+                            sql.Identifier(subscription),
+                        ))
+                        conn.execute(sql.SQL('DROP SUBSCRIPTION {}').format(sql.Identifier(subscription)))
                 admin.execute(sql.SQL('DROP DATABASE {} WITH (FORCE)').format(sql.Identifier(name)))
 
 
@@ -106,6 +119,60 @@ def test_changed_database_rejects_reviewed_plan(databases):
         operations.apply(connection, desired(), plan['plan_id'])
     with psycopg.connect(**connection) as conn:
         assert conn.execute("SELECT to_regclass('public.items')").fetchone()[0] is None
+
+
+@pytest.mark.parametrize('existing_object', [
+    'CREATE SCHEMA occupied',
+    "CREATE TYPE public.mood AS ENUM ('happy', 'sad')",
+    "SELECT lo_from_bytea(0, 'existing data'::bytea)",
+    'CREATE COLLATION public.custom FROM "C"',
+    'CREATE TEXT SEARCH CONFIGURATION public.custom (COPY = pg_catalog.simple)',
+    'CREATE PUBLICATION existing_publication',
+    "CREATE SUBSCRIPTION existing_subscription CONNECTION 'dbname=unused' "
+    "PUBLICATION unused WITH (connect=false)",
+])
+def test_restore_rejects_objects_without_tables(databases, tmp_path, existing_object):
+    source, target = databases
+    plan = operations.plan(source, desired())
+    operations.apply(source, desired(), plan['plan_id'])
+    store = BackupStore(tmp_path / 'archives')
+    archive = store.create(source)
+    with psycopg.connect(**target) as conn:
+        conn.execute(existing_object)
+    with pytest.raises(ValueError, match='empty'):
+        store.restore(target, archive['backup_id'], target['dbname'])
+    with psycopg.connect(**target) as conn:
+        assert conn.execute("SELECT to_regclass('public.items')").fetchone()[0] is None
+
+
+def test_restore_as_database_owner_ignores_other_database_subscriptions(databases, tmp_path):
+    source, _ = databases
+    plan = operations.plan(source, desired())
+    operations.apply(source, desired(), plan['plan_id'])
+    store = BackupStore(tmp_path / 'archives')
+    archive = store.create(source)
+    role = 'restore_owner_' + uuid4().hex[:12]
+    target = 'restore_target_' + uuid4().hex[:12]
+    with psycopg.connect(**source, autocommit=True) as conn:
+        conn.execute("CREATE SUBSCRIPTION other_database_subscription CONNECTION 'dbname=unused' "
+                     "PUBLICATION unused WITH (connect=false)")
+    with psycopg.connect(**dict(source, dbname='postgres'), autocommit=True) as admin:
+        admin.execute(sql.SQL('CREATE ROLE {} LOGIN PASSWORD {}').format(
+            sql.Identifier(role), sql.Literal('temporary-test-password'),
+        ))
+        try:
+            admin.execute(sql.SQL('CREATE DATABASE {} OWNER {}').format(
+                sql.Identifier(target), sql.Identifier(role),
+            ))
+            try:
+                connection = dict(source, dbname=target, user=role, password='temporary-test-password')
+                assert store.restore(connection, archive['backup_id'], target)['restored']
+                with psycopg.connect(**connection) as conn:
+                    assert conn.execute("SELECT to_regclass('public.items')").fetchone()[0] == 'items'
+            finally:
+                admin.execute(sql.SQL('DROP DATABASE {} WITH (FORCE)').format(sql.Identifier(target)))
+        finally:
+            admin.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))
 
 
 def test_xml_input(databases):

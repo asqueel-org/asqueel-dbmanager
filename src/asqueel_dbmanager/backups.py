@@ -115,12 +115,25 @@ class BackupStore:
         with psycopg.connect(**params) as conn:
             occupied = conn.execute("""
                 SELECT EXISTS (
-                    SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-                    WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+                    SELECT 1 FROM pg_depend d JOIN pg_namespace n ON n.oid=d.refobjid
+                    WHERE d.refclassid = 'pg_namespace'::regclass
+                    AND n.nspname NOT IN ('pg_catalog', 'information_schema')
                     AND n.nspname NOT LIKE 'pg_toast%%' AND n.nspname NOT LIKE 'pg_temp%%'
                     UNION ALL
-                    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-                    WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+                    SELECT 1 FROM pg_namespace
+                    WHERE nspname NOT IN ('public', 'pg_catalog', 'information_schema')
+                    AND nspname NOT LIKE 'pg_toast%%' AND nspname NOT LIKE 'pg_temp%%'
+                    UNION ALL
+                    SELECT 1 FROM pg_largeobject_metadata
+                    UNION ALL
+                    SELECT 1 FROM pg_extension WHERE extname <> 'plpgsql'
+                    UNION ALL
+                    SELECT 1 FROM pg_foreign_server
+                    UNION ALL
+                    SELECT 1 FROM pg_publication
+                    UNION ALL
+                    SELECT 1 FROM pg_subscription
+                    WHERE subdbid = (SELECT oid FROM pg_database WHERE datname = current_database())
                 )
             """).fetchone()[0]
         if occupied:

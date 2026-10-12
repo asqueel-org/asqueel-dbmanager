@@ -15,6 +15,8 @@ Requires Python 3.11+, `asqueel-migration` 0.2, and Kajenn 0.1.
 Until migration 0.2 is released, install its matching checkout first:
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
 python -m pip install -e '../asqueel-migration[postgresql,validation]'
 python -m pip install -e '.[postgresql]'
 asqueel-dbmanager --port 8000
@@ -98,7 +100,8 @@ Removals are disabled unless `allow_removals` is explicitly true.
 Plan identifiers bind the target, desired/current structure and generated SQL.
 A changed plan produces HTTP 409 before execution. Unsupported operations
 prevent apply. Failure responses retain transaction outcome flags without
-driver messages or passwords. `verified: false` means DDL ran but residual
+driver messages or passwords. Request validation errors also omit rejected
+values, including on the MCP surface. `verified: false` means DDL ran but residual
 differences remain; it does not imply rollback.
 
 Manager operations use a PostgreSQL advisory lock in the `postgres` maintenance
@@ -121,6 +124,11 @@ roles, restore ownership/grants, or provide point-in-time recovery. Extension
 availability and other server prerequisites must match the archive.
 Archive verification checks integrity/readability; a tested restore is the
 stronger validation, exercised by the integration suite with actual row data.
+
+The empty-target check also rejects user schemas, types, collations, text-search
+objects and large objects even when no tables exist, as well as installed
+extensions other than the default `plpgsql`, foreign servers and replication
+publications/subscriptions. Use a freshly created database for restore.
 
 For asynchronous backup/restore, configure a JSON file of named connections:
 
@@ -169,3 +177,18 @@ backup/restoration of row data are covered.
 Next extensions: additional database backends, authenticated remote deployment,
 archive retention and maintenance utilities. They belong to this manager;
 schema comparison and dialect SQL remain in the migration engine.
+
+## Coordinated delivery
+
+This implementation is reviewed together with
+[migration engine PR 18](https://github.com/asqueel-org/asqueel-migration/pull/18)
+and [Asqueel compatibility PR 10](https://github.com/asqueel-org/asqueel/pull/10).
+The engine's 0.2 release must be available before publishing DB Manager.
+Until then, CI uses the exact engine revision recorded in its workflow and local
+installation uses the matching engine checkout. A version declared in package
+metadata does not mean that version has already been published.
+
+After the engine release, replace the temporary source pins in the manager's CI
+and Asqueel's development requirements, then verify a fresh installation from
+the published dependencies before releasing the manager. Merge and publication
+are separate steps from the checks performed on these PRs.

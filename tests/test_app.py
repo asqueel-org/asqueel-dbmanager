@@ -3,6 +3,7 @@
 import asyncio
 import json
 
+import pytest
 from conftest import _request
 
 from asqueel_dbmanager import operations
@@ -64,6 +65,28 @@ def test_error_does_not_reflect_credentials(server, monkeypatch):
     assert status == 500 and b'secret-value' not in body
 
 
+@pytest.mark.parametrize('endpoint,arguments', [
+    ('check_connection', {'connection': 'password=private-secret'}),
+    ('plan', {'connection': {'dbname': 'demo', 'password': 'private-secret'},
+              'structure': ['private-secret']}),
+    ('plan', {'connection': {'dbname': 'demo', 'password': 'private-secret'},
+              'structure': {}, 'allow_removals': 'private-secret'}),
+    ('introspect', {'connection': {'dbname': 'demo'}, 'schemas': [42, 'private-secret']}),
+])
+def test_invalid_arguments_never_reflect_input(server, endpoint, arguments):
+    status, body = _request(server, f'/{endpoint}', method='POST', payload=arguments)
+    assert status == 400
+    assert b'private-secret' not in body
+    status, body = _request(server, '/mcp', method='POST', payload={
+        'jsonrpc': '2.0', 'id': 1, 'method': 'tools/call',
+        'params': {'name': endpoint, 'arguments': arguments},
+    })
+    assert status == 200
+    response = json.loads(body)
+    assert 'error' in response or response.get('result', {}).get('isError')
+    assert b'private-secret' not in body
+
+
 def test_native_kajenn_task_execution_without_credentials_in_spool(server, tmp_path, monkeypatch):
     from asqueel_dbmanager.backups import BackupStore
     profile = tmp_path / 'connections.json'
@@ -93,3 +116,40 @@ def test_invalid_backup_and_job_ids(server):
         ('submit', {'operation': 'arbitrary', 'connection_name': 'demo'}),
     ]:
         assert _request(server, f'/{endpoint}', method='POST', payload=payload)[0] == 400
+
+
+@pytest.mark.parametrize('changed_field,expected_outcome', [
+    ('dbname', 'error'), ('host', 'error'), ('password', 'ok'),
+])
+def test_queued_job_checks_destination_and_allows_password_rotation(
+    server, tmp_path, monkeypatch, changed_field, expected_outcome,
+):
+    from asqueel_dbmanager.backups import BackupStore
+    profile = tmp_path / 'connections.json'
+    connection = {'dbname': 'demo', 'host': 'localhost', 'password': 'old-secret'}
+    profile.write_text(json.dumps({'demo': connection}))
+    monkeypatch.setenv('ASQUEEL_DBMANAGER_CONNECTIONS', str(profile))
+    calls = []
+
+    def backup(self, params):
+        calls.append(params)
+        return {'database': params['dbname']}
+
+    monkeypatch.setattr(BackupStore, 'create', backup)
+    status, body = _request(server, '/submit', method='POST', payload={
+        'operation': 'backup', 'connection_name': 'demo',
+    })
+    assert status == 200
+    task_id = json.loads(body)['task_id']
+    connection[changed_field] = 'new-value'
+    profile.write_text(json.dumps({'demo': connection}))
+    spool = server.tasks.spool
+    spool.assign(task_id, 'local')
+    assert asyncio.run(server.tasks.executor.execute(task_id, 'local')) == expected_outcome
+    if expected_outcome == 'ok':
+        assert calls == [{**connection, 'connect_timeout': 10}]
+    else:
+        assert calls == []
+    status, body = _request(server, '/job', method='POST', payload={'task_id': task_id})
+    assert status == 200
+    assert b'old-secret' not in body and b'new-value' not in body

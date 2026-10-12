@@ -29,6 +29,9 @@ Issues = "https://github.com/asqueel-org/asqueel-dbmanager/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["src/asqueel_dbmanager"]
 
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/tests", "/README.md", "/LICENSE", "/NOTICE", "/pyproject.toml"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["postgresql: requires a PostgreSQL server and client tools"]

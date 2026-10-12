@@ -31,6 +31,13 @@ _OPERATIONS = {
 }
 
 
+class _InvalidArguments(HTTPBadRequest):
+    """Hide client values included in framework validation exceptions."""
+
+    def __init__(self, _selector):
+        super().__init__('Invalid operation arguments; check the request schema')
+
+
 def _profile_signature(connection):
     target = {k: v for k, v in connection.items() if k != 'password'}
     return hashlib.sha256(json.dumps(target, sort_keys=True).encode()).hexdigest()
@@ -67,6 +74,15 @@ class DbManagerApp(McpOpenApiApplication):
 
     mount = ''
     openapi_info = {'title': 'Asqueel DB Manager', 'version': __version__}
+
+    def spread_over_params(self, node, data):
+        # Kajenn uses this binding hook for both REST and MCP. Keep its native
+        # validation and protocol handling, but never echo rejected arguments.
+        node.set_custom_exceptions({
+            'signature_error': _InvalidArguments,
+            'validation_error': _InvalidArguments,
+        })
+        return super().spread_over_params(node, data)
 
     async def __call__(self, scope, receive, send):
         if scope.get('type') == 'http':
