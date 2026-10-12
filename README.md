@@ -12,13 +12,12 @@ That package remains usable without this server or Kajenn.
 ## Install and run
 
 Requires Python 3.11+, `asqueel-migration` 0.2, and Kajenn 0.1.
-Until migration 0.2 is released, install its matching checkout first:
+Install the PostgreSQL extra, which includes the database driver:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e '../asqueel-migration[postgresql,validation]'
-python -m pip install -e '.[postgresql]'
+python -m pip install 'asqueel-dbmanager[postgresql]'
 asqueel-dbmanager --port 8000
 ```
 
@@ -183,12 +182,12 @@ schema comparison and dialect SQL remain in the migration engine.
 This implementation is reviewed together with
 [migration engine PR 18](https://github.com/asqueel-org/asqueel-migration/pull/18)
 and [Asqueel compatibility PR 10](https://github.com/asqueel-org/asqueel/pull/10).
-The engine's 0.2 release must be available before publishing DB Manager.
-Until then, CI uses the exact engine revision recorded in its workflow and local
-installation uses the matching engine checkout. A version declared in package
-metadata does not mean that version has already been published.
+The manager uses the published migration engine 0.2 series; CI and installations
+resolve it from PyPI. Asqueel 0.5.2 accepts the same engine while retaining its
+direct migration API. No source-revision dependency is required.
 
-After the engine release, replace the temporary source pins in the manager's CI
-and Asqueel's development requirements, then verify a fresh installation from
-the published dependencies before releasing the manager. Merge and publication
-are separate steps from the checks performed on these PRs.
+Release tags must match the version in `pyproject.toml`. The publishing workflow
+builds and validates wheel and source archives, checks clean installations of
+both, and publishes through the GitHub `release` environment using PyPI Trusted
+Publishing. The publisher is bound to `asqueel-org/asqueel-dbmanager`, workflow
+`publish.yml`, environment `release`.
