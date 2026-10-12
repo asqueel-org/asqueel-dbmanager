@@ -1,18 +1,28 @@
 # Asqueel DB Manager
 
-A **Kajenn application** for PostgreSQL schema migrations, backups, restores
-and database utilities. The same typed routes generate OpenAPI documentation
-and MCP tools. There is no second protocol implementation or separate task queue:
-long-running jobs use Kajenn's native task spool and executor.
+[![PyPI](https://img.shields.io/pypi/v/asqueel-dbmanager)](https://pypi.org/project/asqueel-dbmanager/)
+[![Tests](https://github.com/asqueel-org/asqueel-dbmanager/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/asqueel-org/asqueel-dbmanager/actions/workflows/tests.yml)
+[![Documentation](https://img.shields.io/readthedocs/asqueel-dbmanager?version=latest)](https://asqueel-dbmanager.readthedocs.io/en/latest/)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://github.com/asqueel-org/asqueel-dbmanager/blob/main/pyproject.toml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue)](https://github.com/asqueel-org/asqueel-dbmanager/blob/main/LICENSE)
 
-Migration SQL is produced and executed by
-[asqueel-migration](https://github.com/asqueel-org/asqueel-migration).
-That package remains usable without this server or Kajenn.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/asqueel-org/asqueel-dbmanager/main/assets/branding/asqueel-dbmanager-inverse.svg">
+  <img src="https://raw.githubusercontent.com/asqueel-org/asqueel-dbmanager/main/assets/branding/asqueel-dbmanager-primary.svg" alt="Asqueel DB Manager" width="360">
+</picture>
+
+**PostgreSQL administration through REST and MCP: review schema migrations,
+create backups, restore copies and run background jobs.**
+
+DB Manager is a [Kajenn](https://pypi.org/project/kajenn/) application. One set of
+typed routes produces OpenAPI documentation and MCP tools; long-running jobs use
+Kajenn's native task executor. Schema comparison and migration SQL come from
+[Asqueel Migration](https://github.com/asqueel-org/asqueel-migration), which remains
+usable independently of this server.
 
 ## Install and run
 
-Requires Python 3.11+, `asqueel-migration` 0.2, and Kajenn 0.1.
-Install the PostgreSQL extra, which includes the database driver:
+Requires Python 3.11+ and PostgreSQL. Install the database driver extra:
 
 ```bash
 python -m venv .venv
@@ -21,173 +31,78 @@ python -m pip install 'asqueel-dbmanager[postgresql]'
 asqueel-dbmanager --port 8000
 ```
 
-The command starts Kajenn on `127.0.0.1`. The equivalent Python composition is:
+- Swagger UI: <http://127.0.0.1:8000/_meta/docs>
+- OpenAPI schema: <http://127.0.0.1:8000/_meta/schema_json>
+- MCP Streamable HTTP: <http://127.0.0.1:8000/mcp>
 
-```python
-from kajenn import AsgiServer
-from asqueel_dbmanager.app import DbManagerApp, DbManagerWorker
+Backup and restore also require compatible `pg_dump` and `pg_restore` programs
+on the server's `PATH`. The CLI binds to `127.0.0.1`.
 
-AsgiServer(applications=[DbManagerApp, DbManagerWorker]).serve(
-    host='127.0.0.1', port=8000,
-)
+```bash
+curl --fail-with-body http://127.0.0.1:8000/check_connection \
+  -H 'Content-Type: application/json' \
+  -d '{"connection":{"host":"localhost","dbname":"demo","user":"postgres"}}'
 ```
 
-- Swagger UI: `http://127.0.0.1:8000/_meta/docs`
-- Generated OpenAPI: `http://127.0.0.1:8000/_meta/schema_json`
-- MCP Streamable HTTP: `http://127.0.0.1:8000/mcp`
+Adjust the connection to an existing database accessible to your account.
+See [installation](docs/guide/installation.md) for Python composition and setup.
 
-PostgreSQL client programs `pg_dump` and `pg_restore` must also be on the
-server's PATH for backups. Install client tools compatible with your database
-server; the driver alone does not include them.
+## What it does
 
-## Operations
-
-Every public operation is a POST with a JSON body and an MCP tool of the same
-name. Connection parameters never belong in URLs. No hand-maintained OpenAPI
-document or tool registry is needed; signatures and route metadata define both.
-
-| Route / MCP tool | Result |
+| Workflow | REST endpoints and MCP tools |
 | --- | --- |
-| `check_connection` | Connectivity, server version and migration capabilities |
-| `introspect` | Normalized schema JSON, optionally limited to named schemas |
-| `plan` | SQL, warnings, skipped operations and a reviewed-plan identifier |
-| `apply` | Execution details and a fresh convergence check |
-| `backup` | Custom-format archive metadata, checksum and tool version |
-| `backups` | Completed archives |
-| `verify_backup` | Checksum and archive table-of-contents verification |
-| `restore` | Restore into an explicitly named, existing empty database |
-| `submit` | Queue a backup/restore through Kajenn and return its task ID |
-| `job` | Task status and result |
+| Inspect connectivity and schema | `check_connection`, `introspect` |
+| Review SQL, then apply a bound plan and verify convergence | `plan`, `apply` |
+| Create, list and verify custom-format archives | `backup`, `backups`, `verify_backup` |
+| Restore into an explicitly confirmed empty database | `restore` |
+| Queue backup/restore and inspect the result | `submit`, `job` |
 
-The worker application is internal: it has no OpenAPI/MCP surface and rejects
-HTTP requests. Public operations are identical over REST and MCP, including
-explicit mutation operations (`apply`, `backup`, `restore`, `submit`).
+Every REST operation is a POST with a JSON body. Credentials never belong in
+URLs. Removals are disabled by default; apply requires the reviewed `plan_id` as
+`expected_plan`. A changed plan is rejected before execution.
 
-## Plan and apply
+## Documentation
 
-```python
-import requests
-from asqueel_migration import JsonStructureProducer
+Read the [developer manual on Read the Docs](https://asqueel-dbmanager.readthedocs.io/en/latest/)
+or browse the guides in this repository:
 
-structure = JsonStructureProducer({
-    'db': 'model',
-    'schemas': [{'name': 'public', 'tables': [{
-        'name': 'items', 'pkey': 'id',
-        'columns': [{'name': 'id', 'dtype': 'I'}, {'name': 'title', 'dtype': 'T'}],
-    }]}],
-}).get_json_struct()
-payload = {'connection': {'host': 'localhost', 'dbname': 'demo', 'user': 'postgres'},
-           'structure': structure}
-response = requests.post('http://127.0.0.1:8000/plan', json=payload)
-response.raise_for_status()
-plan = response.json()
-print(plan['sql'], plan['warnings'])  # Review before the next operation.
-response = requests.post('http://127.0.0.1:8000/apply', json={
-    **payload, 'expected_plan': plan['plan_id'],
-})
-response.raise_for_status()
-result = response.json()
-assert result['verified'], result['remaining']
-```
+- [Overview and current scope](docs/guide/overview.md)
+- [Installation](docs/guide/installation.md)
+- [Plan and apply migrations](docs/guide/migrations.md)
+- [Backup and restore](docs/guide/backups.md)
+- [Background jobs and connection profiles](docs/guide/jobs.md)
+- [REST and MCP reference](docs/guide/api.md)
+- [Deployment, configuration and troubleshooting](docs/guide/deployment.md)
+- [Development and publishing](docs/guide/development.md)
 
-`structure` accepts a normalized JSON object or a serialized JSON document.
-Use `format: "xml"` with an XML string for the existing SQL-model XML format.
-Human-friendly producer JSON must be compiled to the normalized contract first.
-The connection chooses the actual database; the model root name is descriptive.
-Removals are disabled unless `allow_removals` is explicitly true.
+## Deployment scope
 
-Plan identifiers bind the target, desired/current structure and generated SQL.
-A changed plan produces HTTP 409 before execution. Unsupported operations
-prevent apply. Failure responses retain transaction outcome flags without
-driver messages or passwords. Request validation errors also omit rejected
-values, including on the MCP surface. `verified: false` means DDL ran but residual
-differences remain; it does not imply rollback.
+Version 0.1 supports PostgreSQL and trusted local callers. HTTP and MCP reject
+non-loopback peers; loopback is not authentication. Do not proxy this service to
+untrusted remote users. Remote authentication and multi-user authorization are
+not implemented.
 
-Manager operations use a PostgreSQL advisory lock in the `postgres` maintenance
-database, so the account needs access to it. This serializes manager migrations,
-backups and restores across processes. External DDL clients do not automatically
-honor this lock: coordinate maintenance with them. Database creation is outside
-the target DDL transaction, following the migration engine contract.
-
-## Backup and restore
-
-Archives are written beneath `ASQUEEL_DBMANAGER_BACKUP_DIR` (default
-`.dbmanager/backups`). Clients receive generated IDs, never choose server paths.
-Completed metadata includes the original database name, timestamp, byte size,
-SHA-256 and `pg_dump` version; it does not contain connection credentials.
-
-Restore requires an existing empty database and `confirm_database` equal to its
-name. It runs `pg_restore --single-transaction --exit-on-error --no-owner
---no-privileges`. It does not overwrite a live application, recreate cluster
-roles, restore ownership/grants, or provide point-in-time recovery. Extension
-availability and other server prerequisites must match the archive.
-Archive verification checks integrity/readability; a tested restore is the
-stronger validation, exercised by the integration suite with actual row data.
-
-The empty-target check also rejects user schemas, types, collations, text-search
-objects and large objects even when no tables exist, as well as installed
-extensions other than the default `plpgsql`, foreign servers and replication
-publications/subscriptions. Use a freshly created database for restore.
-
-For asynchronous backup/restore, configure a JSON file of named connections:
-
-```json
-{"development": {"host": "localhost", "dbname": "demo", "user": "postgres"}}
-```
-
-Set `ASQUEEL_DBMANAGER_CONNECTIONS` to this file's absolute path. Keep the file
-private if it contains passwords. Submit with
-`{"operation":"backup","connection_name":"development"}`; use the returned
-`task_id` with `job`. Restore additionally takes `backup_id` and
-`confirm_database`. Only the profile name and target fingerprint enter Kajenn's
-spool; passwords are resolved on the server when execution starts. Changes to
-the destination profile invalidate queued work (password rotation is allowed).
-Task state survives in Kajenn's spool; progress is lifecycle state, not a
-fabricated completion percentage. Cancellation/retry policies are not yet part
-of this application's contract. Archives have no automatic retention policy.
-
-## Deployment scope and compatibility
-
-This initial release supports PostgreSQL and trusted local callers. Both HTTP
-and MCP reject non-loopback peers. Do not expose it through a proxy to remote
-users: loopback is not authentication. Remote multi-user deployment requires
-identity, destination authorization and job ownership rules.
-
-The service replaces the local `asqueel_migration.app.EditorApp` application
-and `[app]` extra removed in migration 0.2. `/plan` replaces its `/migrate` dry
-run, schema JSON is the main input, and `apply` now requires the reviewed plan
-identifier. The engine's Python XML helper functions remain available.
+Migrations, backups and restores share a PostgreSQL advisory lock in the
+`postgres` maintenance database. The database role needs access to it; external
+DDL clients must coordinate separately. Restore requires an existing empty
+database and does not restore ownership/grants, cluster roles or point-in-time
+recovery. Archives have no automatic retention policy.
 
 ## Development
 
 ```bash
-python -m pip install -e '.[dev,postgresql]'
+python -m pip install -e '.[dev,postgresql,docs]'
 ruff check src tests
-pytest
+pytest -q
 python -m build
+python -m sphinx -W --keep-going -b html docs docs/_build/html
 ```
 
-PostgreSQL tests use an ephemeral `testing.postgresql` server, or the server
-configured by `GNR_TEST_PG_HOST`, `GNR_TEST_PG_PORT`, `GNR_TEST_PG_USER` and
-`GNR_TEST_PG_PASSWORD`. They create uniquely named temporary databases and remove
-them afterward. OpenAPI, MCP, native task execution, stale plans, migrations and
-backup/restoration of row data are covered.
+Integration tests use a temporary PostgreSQL server or a configured test server.
+See the [development guide](docs/guide/development.md) for environment variables,
+Read the Docs setup and release checks.
 
-Next extensions: additional database backends, authenticated remote deployment,
-archive retention and maintenance utilities. They belong to this manager;
-schema comparison and dialect SQL remain in the migration engine.
-
-## Coordinated delivery
-
-This implementation is reviewed together with
-[migration engine PR 18](https://github.com/asqueel-org/asqueel-migration/pull/18)
-and [Asqueel compatibility PR 10](https://github.com/asqueel-org/asqueel/pull/10).
-The manager uses the published migration engine 0.2 series; CI and installations
-resolve it from PyPI. Asqueel 0.5.2 accepts the same engine while retaining its
-direct migration API. No source-revision dependency is required.
-
-Release tags must match the version in `pyproject.toml`. The publishing workflow
-builds and validates wheel and source archives, checks clean installations of
-both, and publishes through the GitHub `release` environment using PyPI Trusted
-Publishing. The publisher is bound to `asqueel-org/asqueel-dbmanager`, workflow
-`publish.yml`, environment `release`.
+Part of the [Asqueel organization](https://github.com/asqueel-org), alongside
+[Asqueel](https://github.com/asqueel-org/asqueel) and
+[Asqueel Migration](https://github.com/asqueel-org/asqueel-migration).
+Licensed under [Apache 2.0](LICENSE).

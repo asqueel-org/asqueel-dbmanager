@@ -17,12 +17,14 @@ dependencies = [
 
 [project.optional-dependencies]
 postgresql = ["asqueel-migration[postgresql]>=0.2.0,<0.3.0"]
+docs = ["sphinx>=8.0", "sphinx-rtd-theme>=3.0", "myst-parser>=4.0"]
 dev = ["pytest>=7", "ruff", "testing.postgresql", "build"]
 
 [project.scripts]
 asqueel-dbmanager = "asqueel_dbmanager.__main__:main"
 
 [project.urls]
+Documentation = "https://asqueel-dbmanager.readthedocs.io/en/latest/"
 Repository = "https://github.com/asqueel-org/asqueel-dbmanager"
 Issues = "https://github.com/asqueel-org/asqueel-dbmanager/issues"
 
@@ -30,7 +32,11 @@ Issues = "https://github.com/asqueel-org/asqueel-dbmanager/issues"
 packages = ["src/asqueel_dbmanager"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/src", "/tests", "/README.md", "/LICENSE", "/NOTICE", "/pyproject.toml"]
+include = [
+    "/src", "/tests", "/README.md", "/LICENSE", "/NOTICE", "/pyproject.toml",
+    "/.readthedocs.yaml", "/assets/branding", "/docs/conf.py", "/docs/index.rst",
+    "/docs/guide", "/docs/_static",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
