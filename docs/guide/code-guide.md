@@ -19,32 +19,58 @@ HTML pages; JavaScript calls the same `console_action` service available through
 REST/MCP. There is no independent browser-only implementation of migrations,
 backup or query execution.
 
-```text
-CLI (__main__.py)                    HTTP / MCP clients
-  | local operations                       |
-  |                                  Kajenn ASGI server
-  |                                        |
-  |                              DbManagerApp (app.py)
-  |                               /        |         \
-  |                       WebUI         routes       diagram resources
-  |                         |              |
-  |                  Gramlot pages ---- console_action
-  |                                        |
-  |                                    Workbench
-  |                          /             |             \
-  +---------------- operations         QuerySessions     DiagramPages
-                         |              /        \             |
-                 Asqueel Migration   catalog   provider   Graphviz / Cytoscape
-                         |
-                     PostgreSQL
+The first diagram shows the entry points and request dispatch:
 
-BackupStore invokes PostgreSQL's pg_dump / pg_restore under the shared DB lock.
-ConnectionCatalog uses genro-storage encryption for profiles and guide metadata.
+```mermaid
+flowchart TB
+    clients["HTTP / MCP clients"] --> kajenn["Kajenn ASGI server"]
+    kajenn --> app["DbManagerApp · app.py"]
+    app --> ui["WebUI"]
+    app --> routes["REST / MCP routes"]
+    app --> resources["Diagram resources"]
+    ui --> pages["Gramlot pages"]
+    pages -->|JavaScript requests| action["console_action"]
+    routes --> action
+    action --> workbench["Workbench"]
+    resources --> diagrams["DiagramPages"]
+
+    classDef entry fill:#f5ebdd,stroke:#c78249,color:#2c2223
+    classDef core fill:#571f2b,stroke:#571f2b,color:#ffffff
+    class clients,kajenn,pages entry
+    class app,workbench core
 ```
 
-The diagram is a dependency map, not a process map. The application, workbench,
-catalog and session manager run inside the same server process. PostgreSQL,
-Graphviz, 1Password and the model provider are external integrations.
+The second diagram expands the services used by the workbench and local CLI
+commands. Workbench accesses app-owned services through `DbManagerApp`:
+
+```mermaid
+flowchart TB
+    cli["CLI entry point"] -->|local commands| operations["operations.py"]
+    workbench["Workbench"] --> operations
+    workbench --> sessions["QuerySessions"]
+    workbench --> diagrams["DiagramPages"]
+    workbench --> backups["BackupStore"]
+    operations --> migration["Asqueel Migration"]
+    migration --> postgres[("PostgreSQL")]
+    backups --> tools["pg_dump / pg_restore"]
+    tools --> postgres
+    sessions --> catalog["ConnectionCatalog"]
+    sessions --> provider["AnthropicQueries"]
+    catalog --> storage["genro-storage encryption"]
+    diagrams --> render["Graphviz / Cytoscape"]
+
+    classDef integration fill:#f5ebdd,stroke:#c78249,color:#2c2223
+    classDef core fill:#571f2b,stroke:#571f2b,color:#ffffff
+    class cli,migration,postgres,tools,storage,render,provider integration
+    class workbench,sessions,backups,diagrams core
+```
+
+These diagrams are dependency maps. The application, workbench, catalog and
+session manager run inside the same server process. PostgreSQL, Graphviz,
+1Password and the model provider are external integrations; Cytoscape runs in
+the browser. `BackupStore` invokes PostgreSQL's `pg_dump` / `pg_restore` under
+the shared DB lock. `ConnectionCatalog` uses genro-storage encryption for
+profiles and guide metadata.
 
 ## Main classes and responsibilities
 

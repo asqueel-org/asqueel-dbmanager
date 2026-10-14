@@ -8,7 +8,20 @@ author = "Softwell S.r.l."
 release = _package_version("asqueel-dbmanager")
 version = release
 language = "en"
-extensions = ["myst_parser"]
+extensions = ["myst_parser", "sphinxcontrib.mermaid"]
+myst_fence_as_directive = ["mermaid"]
+# The manual has a light background even when the browser prefers dark mode.
+mermaid_light_theme = mermaid_dark_theme = "base"
+mermaid_init_config = {
+    "startOnLoad": False,
+    "themeVariables": {
+        "primaryColor": "#f5ebdd",
+        "primaryTextColor": "#2c2223",
+        "primaryBorderColor": "#c78249",
+        "lineColor": "#79323d",
+        "edgeLabelBackground": "#fffcf8",
+    },
+}
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 # Only the public manual is built; local planning notes stay outside it.
 include_patterns = ["index.rst", "guide/**"]
