@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "asqueel-dbmanager"
-version = "0.1.0"
+version = "0.2.0"
 description = "Kajenn application for database migrations, backups and restores"
 requires-python = ">=3.11"
 readme = "README.md"

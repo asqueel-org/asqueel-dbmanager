@@ -1,8 +1,7 @@
 # Development and releases
 
-> **Source beta:** these features are available on the public GitHub branch.
-> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
-> package has not been updated yet. See [availability](availability.md).
+> **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
+> Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
 ```bash
 python -m pip install -e '.[dev,postgresql,ui,queries]'
@@ -58,8 +57,9 @@ its public URL is `https://asqueel-dbmanager.readthedocs.io/en/latest/`.
 If using manual import, configure the webhook shown in the project's Integrations
 page. See the [official project setup guide](https://docs.readthedocs.com/platform/stable/intro/add-project.html).
 
-Release tag `v0.1.0` predates this manual. Keep documentation on `latest` until a
-new release includes these files; do not select that older tag for a docs build.
+Release tag `v0.2.0` includes the manual and code guide. `latest` follows the
+default branch; use the matching release tag when building versioned documentation.
+The older `v0.1.0` tag predates the manual.
 
 ## Package compatibility and publishing
 

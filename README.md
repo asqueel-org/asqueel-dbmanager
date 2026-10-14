@@ -23,7 +23,7 @@ standalone server or import the application into an existing Kajenn server.
 
 ## What is available
 
-| Area | Core operations | Additional features on GitHub |
+| Area | Core operations | Additional workflows |
 | --- | --- | --- |
 | Database structure | Connection checks and introspection | Genropy legacy instance selection from the CLI |
 | Migrations | Review generated SQL, apply a bound plan, verify convergence | Guided workbench flow |
@@ -32,9 +32,21 @@ standalone server or import the application into an existing Kajenn server.
 | Diagrams | — | Graphviz layout, Cytoscape interaction, schema/relationship filters, keys and indexes |
 | Natural-language queries | — | Encrypted profiles, manual AI enrollment, database guides and SQL/read-only query sessions |
 
-**All features in the table are available in this repository.** The web
-workbench and query workflows remain beta features. The existing PyPI package
-contains the earlier core; install from source for the current functionality.
+**Version 0.2.0 includes all features in the table.** The web workbench and
+query workflows remain beta features. See the [release notes](docs/guide/release-notes.md)
+and the [code guide](docs/guide/code-guide.md) for architecture and implementation.
+
+## Install from PyPI
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install 'asqueel-dbmanager[ui,queries,postgresql]==0.2.0'
+asqueel-dbmanager --ui --port 8000
+```
+
+Open **http://127.0.0.1:8000/ui/** and follow Getting started. To upgrade, use
+`python -m pip install --upgrade 'asqueel-dbmanager[ui,queries,postgresql]>=0.2.0'`.
 
 ## Install the current version from GitHub
 
@@ -52,14 +64,14 @@ the encrypted catalog key before registering a database and provider credentials
 before AI queries; see [query sessions](docs/guide/queries.md). For an existing
 checkout, pull the updated branch and reinstall the extras above.
 
-## Install and run the published core
+## Run the API and CLI without the UI
 
 Requires Python 3.11+ and access to PostgreSQL:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install 'asqueel-dbmanager[postgresql]'
+python -m pip install 'asqueel-dbmanager[postgresql]>=0.2.0'
 asqueel-dbmanager --port 8000
 ```
 
@@ -116,20 +128,22 @@ is built from the English guides in this repository:
 
 - [Availability and scope](docs/guide/availability.md)
 - [Installation](docs/guide/installation.md)
-- [Gramlot workbench](docs/guide/workbench.md) — source beta
+- [Gramlot workbench](docs/guide/workbench.md) — beta
 - [Migrations](docs/guide/migrations.md)
-- [CLI and Genropy](docs/guide/cli.md) — source beta
-- [Diagrams](docs/guide/diagrams.md) — source beta
-- [AI query sessions](docs/guide/queries.md) — source beta
+- [CLI and Genropy](docs/guide/cli.md) — beta
+- [Diagrams](docs/guide/diagrams.md) — beta
+- [AI query sessions](docs/guide/queries.md) — beta
 - [Backup and restore](docs/guide/backups.md)
 - [REST and MCP](docs/guide/api.md)
 - [Deployment](docs/guide/deployment.md)
+- [Architecture and code guide](docs/guide/code-guide.md)
+- [Release notes](docs/guide/release-notes.md)
 - [Development and publishing](docs/guide/development.md)
 
 ## Access and operational limits
 
-The published core is for trusted local callers. Loopback is not authentication;
-do not expose it through a public proxy. The source beta adds explicit Kajenn-hosted
+The default local mode is for trusted local callers. Loopback is not authentication;
+do not expose it through a public proxy. Version 0.2.0 supports explicit Kajenn-hosted
 identity and profile access checks, without introducing a separate login system.
 See [access modes](docs/guide/workbench.md#access-modes).
 

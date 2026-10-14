@@ -1,8 +1,7 @@
 # Overview
 
-> **Source beta:** these features are available on the public GitHub branch.
-> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
-> package has not been updated yet. See [availability](availability.md).
+> **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
+> Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
 DB Manager is the administration application in the Asqueel family. It connects
 to PostgreSQL, reads its schema, prepares a migration plan from a desired model,
@@ -22,8 +21,8 @@ maintain a separate SQL planner, protocol registry or task queue.
 
 ## Current scope
 
-This manual describes the current source checkout; installed PyPI releases and
-the published manual may lag behind the local beta. PostgreSQL administration is
+This manual describes version 0.2.0, available from PyPI and the matching Git tag.
+The Gramlot and AI workflows remain beta features. PostgreSQL administration is
 available through REST and MCP; see the [API reference](api.md). Migrations use a
 reviewed plan identifier and report a post-apply convergence check.
 

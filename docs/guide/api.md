@@ -1,8 +1,7 @@
 # REST and MCP reference
 
-> **Source beta:** these features are available on the public GitHub branch.
-> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
-> package has not been updated yet. See [availability](availability.md).
+> **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
+> Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
 Every public operation is a POST with a JSON body and an MCP tool of the same
 name. Connection parameters never belong in URLs. No hand-maintained OpenAPI

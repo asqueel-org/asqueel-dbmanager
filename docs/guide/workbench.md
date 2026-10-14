@@ -1,8 +1,7 @@
 # Gramlot workbench (beta)
 
-> **Source beta:** these features are available on the public GitHub branch.
-> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
-> package has not been updated yet. See [availability](availability.md).
+> **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
+> Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
 DB Manager includes a minimal web interface authored with Gramlot and native HTML
 controls. The left navigation opens pages in same-origin iframes and retains open
@@ -11,10 +10,10 @@ advanced components from the Gramlot POC are not dependencies.
 
 ## Run locally
 
-From the current source checkout:
+Install the released package:
 
 ```bash
-python -m pip install -e '.[ui,queries]'
+python -m pip install 'asqueel-dbmanager[ui,queries]>=0.2.0'
 asqueel-dbmanager --ui --port 8000
 ```
 

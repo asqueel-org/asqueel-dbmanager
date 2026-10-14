@@ -1,8 +1,7 @@
 # Backup and restore
 
-> **Source beta:** these features are available on the public GitHub branch.
-> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
-> package has not been updated yet. See [availability](availability.md).
+> **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
+> Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
 Archives are written beneath `ASQUEEL_DBMANAGER_BACKUP_DIR` (default
 `.dbmanager/backups`). Clients receive generated IDs, never choose server paths.

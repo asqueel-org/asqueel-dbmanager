@@ -1,16 +1,14 @@
 # Query sessions through MCP and REST
 
-> **Source beta:** these features are available on the public GitHub branch.
-> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
-> package has not been updated yet. See [availability](availability.md).
+> **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
+> Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
 The local DB Manager can select an encrypted database profile, prepare its
 physical structure with Migration, and answer successive questions through a
-configured Anthropic model. In a development checkout containing the preview,
-install the query extra:
+configured Anthropic model. Install the query extra:
 
 ```bash
-python -m pip install -e '.[queries]'
+python -m pip install 'asqueel-dbmanager[queries]>=0.2.0'
 ```
 
 The default local mode retains the application's localhost boundary. Without an

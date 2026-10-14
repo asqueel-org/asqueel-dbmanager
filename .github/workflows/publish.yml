@@ -33,10 +33,11 @@ jobs:
           for artifact in dist/*.whl dist/*.tar.gz; do
             smoke_dir=$(mktemp -d)
             python -m venv "$smoke_dir"
-            "$smoke_dir/bin/python" -m pip install "$artifact[postgresql]"
+            "$smoke_dir/bin/python" -m pip install "$artifact[postgresql,ui,queries]"
             "$smoke_dir/bin/python" -m pip check
             (cd /tmp && "$smoke_dir/bin/python" -c "import asqueel_dbmanager; from asqueel_dbmanager.app import DbManagerApp; from importlib.metadata import version; assert asqueel_dbmanager.__version__ == version('asqueel-dbmanager')")
             "$smoke_dir/bin/asqueel-dbmanager" --help
+            (cd /tmp && "$smoke_dir/bin/python" -c "from asqueel_dbmanager.web_ui import WebUI; from importlib.resources import files; ui = WebUI(); ui.close(); root = files('asqueel_dbmanager'); assert root.joinpath('pages/home.py').is_file(); assert root.joinpath('static/cytoscape-view.html').is_file()")
           done
       - uses: actions/upload-artifact@v4
         with:

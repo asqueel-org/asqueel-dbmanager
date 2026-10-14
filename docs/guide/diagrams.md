@@ -1,8 +1,7 @@
 # Schema diagrams
 
-> **Source beta:** these features are available on the public GitHub branch.
-> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
-> package has not been updated yet. See [availability](availability.md).
+> **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
+> Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
 Generate a diagram directly from **normalized Asqueel Migration JSON**, such as
 the result of `introspect` or `JsonStructureProducer(...).get_json_struct()`.

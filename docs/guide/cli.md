@@ -1,8 +1,7 @@
 # Command line
 
-> **Source beta:** these features are available on the public GitHub branch.
-> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
-> package has not been updated yet. See [availability](availability.md).
+> **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
+> Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
 The CLI runs operations locally, without starting the HTTP/MCP server or using
 background jobs. `python -m asqueel_dbmanager` accepts the same arguments as

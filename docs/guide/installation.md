@@ -1,17 +1,16 @@
 # Install and run
 
-> **Source beta:** these features are available on the public GitHub branch.
-> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
-> package has not been updated yet. See [availability](availability.md).
+> **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
+> Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
 Requires Python 3.11+, `asqueel-migration` 0.2, and Kajenn 0.1.
-For the full source beta, use the [GitHub installation](availability.md#install-all-current-features-from-github).
-For the earlier PyPI core, install the PostgreSQL extra, which includes the database driver:
+For the full web workbench, use the [complete installation](availability.md).
+For the API and CLI, install the PostgreSQL extra, which includes the database driver:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install 'asqueel-dbmanager[postgresql]'
+python -m pip install 'asqueel-dbmanager[postgresql]>=0.2.0'
 asqueel-dbmanager --port 8000
 ```
 
