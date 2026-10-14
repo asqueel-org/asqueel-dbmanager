@@ -1,5 +1,9 @@
 # Plan and apply migrations
 
+See the [migration flow diagrams](code-guide.md#migration-planning-and-application-flow)
+for structure comparison, plan review, confirmations, locking and post-apply
+verification.
+
 The example uses the Python standard library and the installed migration engine.
 Adjust the connection to your PostgreSQL database, then request a plan:
 

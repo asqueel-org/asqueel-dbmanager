@@ -149,6 +149,76 @@ operations. Its `RLock` coordinates metadata updates inside one process. Backup
 IDs recorded in a source profile's encrypted metadata determine which archives
 the workbench exposes for that profile.
 
+### Migration planning and application flow
+
+Planning reads the selected database and compares it with the desired structure
+without executing DDL. The workbench accepts normalized Migration JSON; direct
+REST/MCP operations also support the documented XML format.
+
+```mermaid
+flowchart TB
+    input["Select database profile and desired structure"] --> access["Check profile access"]
+    access --> validate["Normalize and validate desired structure"]
+    validate --> compare["Asqueel Migration: read current structure and compare with desired"]
+    policy["Removal policy: disabled unless explicitly allowed"] --> compare
+    compare --> plan["Build SQL, warnings, skipped operations and plan_id"]
+    plan --> review["User reviews the plan and its SQL"]
+    review --> decision{"Accept this plan?"}
+    decision -->|No| revise["Revise structure or policy; request a new plan"]
+    revise --> validate
+    decision -->|Yes| approved["Keep reviewed plan_id, structure and removal policy for apply"]
+
+    classDef action fill:#571f2b,stroke:#571f2b,color:#ffffff
+    classDef boundary fill:#f5ebdd,stroke:#c78249,color:#2c2223
+    class compare,plan action
+    class input,policy,review,approved boundary
+```
+
+Applying the plan performs a fresh comparison under the database lock. The
+reviewed identifier is a guard against changes, not a saved SQL script that
+the server executes blindly:
+
+```mermaid
+flowchart TB
+    request["Apply reviewed plan with expected_plan"] --> confirm["Workbench: check administrator permission, profile access and typed profile name"]
+    confirm --> validate["Normalize and validate desired structure again"]
+    validate --> lock["Acquire database advisory lock"]
+    lock --> replan["Re-read current structure and rebuild plan"]
+    replan --> same{"plan_id matches expected_plan?"}
+    same -->|No| stale["Reject stale plan; release lock; user must replan and review"]
+    same -->|Yes| supported{"Any unsupported operations?"}
+    supported -->|Yes| blocked["Reject apply; release lock; revise the requested migration"]
+    supported -->|No| execute["Apply changes: optional database creation, then transactional PostgreSQL DDL"]
+    execute --> success{"Execution succeeded?"}
+    success -->|No| failure["Release lock; report failure phase, rolled_back and partial_state_possible"]
+    success -->|Yes| verify["Read structure again and calculate remaining differences"]
+    verify --> converged{"Remaining plan empty with no skipped operations?"}
+    converged -->|Yes| done["Release lock; return verified: true"]
+    converged -->|No| remaining["Release lock; return verified: false and remaining plan for inspection"]
+
+    classDef action fill:#571f2b,stroke:#571f2b,color:#ffffff
+    classDef boundary fill:#f5ebdd,stroke:#c78249,color:#2c2223
+    class replan,execute,verify action
+    class request,confirm,stale,blocked,failure,done,remaining boundary
+```
+
+The browser also requires a fresh preview if the selected profile, desired
+structure or removal policy changes. The workbench confirms the **logical
+profile name** before calling `operations.apply()`. Direct REST/MCP `apply`
+calls use `expected_plan` as their confirmation contract, without an additional
+typed-name argument. Both paths replan and check the identifier before execution.
+
+Validation, access or lock failures stop before DDL. All exits release any
+acquired advisory lock. A stale plan maps to HTTP 409 on REST; clients must
+request and review a new plan rather than silently retry with a fresh identifier.
+Unsupported operations block apply even when removals are allowed.
+
+Database creation, if required, occurs outside the target DDL transaction and
+can remain after a later DDL failure. Inspect the returned transaction outcome
+flags. Post-apply comparison is a separate step: `verified: false` reports
+remaining differences after execution, not rollback. See
+[plan and apply migrations](migrations.md) for request examples and recovery.
+
 ### Backup and restore flow
 
 These diagrams follow synchronous workbench operations, including their profile
