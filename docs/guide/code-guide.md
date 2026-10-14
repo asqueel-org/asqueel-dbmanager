@@ -175,6 +175,40 @@ values in those descriptions. These flags are also not database access grants.
 
 ## Natural-language query flow
 
+The diagram follows one question in an open query session. Session setup loads
+the authorized database structure and approved guide descriptions, then warms
+the model's prompt cache. The same question flow serves web chat, REST and MCP.
+
+```mermaid
+flowchart TB
+    question["User question · web chat / REST / MCP"] --> checks["Check identity, session, profile version and limits"]
+    checks --> model["AnthropicQueries: generate a JSON proposal"]
+    context["Session context: structure, approved guide and bounded history"] --> model
+    model --> clarification{"Clarification needed?"}
+    clarification -->|Yes| ask["Return clarification to the user"]
+    ask -.->|User supplies more detail| question
+    clarification -->|No| prepare["Check SQL proposal shape and named parameters"]
+    prepare --> mode{"Requested output?"}
+    mode -->|sql| sql["Return SQL, parameters and assumptions without execution"]
+    mode -->|results| execute["Execute in PostgreSQL: read-only transaction, timeouts and row limits"]
+    execute --> success{"Execution succeeded?"}
+    success -->|Yes| rows["Return rows, SQL and usage to the caller"]
+    success -->|No| retry{"Repairable error and fewer than two corrections?"}
+    retry -->|Yes| diagnostic["Add sanitized SQLSTATE diagnostic to the model request"]
+    diagnostic --> model
+    retry -->|No| error["Return query_error with sanitized diagnostic"]
+
+    classDef context fill:#f5ebdd,stroke:#c78249,color:#2c2223
+    classDef service fill:#571f2b,stroke:#571f2b,color:#ffffff
+    class question,context,ask,sql,rows,error context
+    class model,execute service
+```
+
+Database result rows go directly to the caller; they are not sent to the model
+for a final rewrite. Repair requests contain sanitized diagnostics, never raw
+database error messages. Invalid requests, expired sessions and invalid model
+responses stop with an error; they do not enter the SQL repair loop.
+
 1. `QuerySessions.open()` loads an authorized profile, introspects its structure
    and builds compact table/column/relation metadata with `structure_details()`.
 2. If a ready guide exists, its profile and structure fingerprints must match.

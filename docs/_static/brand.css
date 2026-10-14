@@ -26,6 +26,9 @@ body, .wy-nav-content { color: var(--asqueel-ink); }
 .rst-content .note .admonition-title, .rst-content .tip .admonition-title { background: var(--asqueel-wine); }
 .rst-content .note, .rst-content .tip { background: var(--asqueel-parchment); }
 .rst-content .mermaid { background: #fffcf8; border-color: #dbc8b6; }
+/* Keep the fullscreen viewer consistent with the manual's light diagrams. */
+body .mermaid-container-fullscreen,
+body .mermaid-container-fullscreen .mermaid { background: #fffcf8; color: var(--asqueel-ink); }
 .rst-content table.docutils thead { background: var(--asqueel-parchment); }
 .btn-neutral { color: var(--asqueel-oxblood) !important; }
 a:focus-visible, button:focus-visible { outline: 3px solid var(--asqueel-copper); outline-offset: 3px; }
