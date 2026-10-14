@@ -151,6 +151,47 @@ the workbench exposes for that profile.
 
 ## Profiles, guides and privacy data
 
+The workbench separates registration (saving an authorized connection profile)
+from enrollment (reviewing and approving its database guide):
+
+```mermaid
+flowchart TB
+    input["Administrator: database name and connection settings"] --> check["Check database connection"]
+    legacy["Administrator: Genropy legacy instance"] --> resolve["Resolve instance connection settings"]
+    resolve --> check
+    check --> profile["Encrypt profile and owner access list; status: not_enrolled"]
+    profile --> prepare["prepare: introspect with Asqueel Migration"]
+    prepare --> draft["Save encrypted draft: structure, fingerprints and revision"]
+    draft --> review["User reviews guide notes and table descriptions"]
+    review --> privacy["Privacy: table default H / allow; columns inherit or override"]
+    privacy --> validate["save_guide: check profile version, revision and policies"]
+    validate --> approve{"Confirm enrollment?"}
+    approve -->|No| saved["Save as draft"]
+    saved --> review
+    approve -->|Yes| ready["Save as ready"]
+    ready --> open["Open workbench chat: recheck access and introspect structure"]
+    open --> current{"Profile and structure still match?"}
+    current -->|No| refresh["Block chat; refresh structure and review enrollment"]
+    refresh --> prepare
+    current -->|Yes| session["Open query session with structure and approved descriptions"]
+
+    classDef user fill:#f5ebdd,stroke:#c78249,color:#2c2223
+    classDef service fill:#571f2b,stroke:#571f2b,color:#ffffff
+    class input,legacy,review,privacy user
+    class profile,draft,ready,session service
+```
+
+New tables default to `H` (hide). During review, table privacy can be `H` or
+explicit `null` (allow); each column can inherit its table's setting or override
+it with `H` / `null`. Refreshing the structure preserves existing descriptions
+and policies for matching tables and columns, but returns the guide to `draft`
+for review. A stale revision must be reloaded before saving.
+
+Draft preparation reads database metadata; it does not ask an LLM to generate
+descriptions or inspect sample rows. Notes and descriptions are supplied by the
+user. The `ready` gate shown here applies to workbench chat; direct query-session
+API calls have the separate contract described in [query sessions](queries.md).
+
 `ConnectionCatalog.save()` writes one encrypted document per profile. It validates
 names, restricts file/directory permissions and publishes a temporary file
 atomically. `load()` checks the identity allowlist, decrypts the connection and
