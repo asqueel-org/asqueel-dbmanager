@@ -149,6 +149,74 @@ operations. Its `RLock` coordinates metadata updates inside one process. Backup
 IDs recorded in a source profile's encrypted metadata determine which archives
 the workbench exposes for that profile.
 
+### Backup and restore flow
+
+These diagrams follow synchronous workbench operations, including their profile
+access checks. Creating a backup requires administrator access but no typed name
+confirmation. Restore additionally requires the destination profile name to be
+typed explicitly.
+
+```mermaid
+flowchart TB
+    request["Create backup: select source profile"] --> access["Check administrator permission and source profile access"]
+    access --> lock["Acquire database advisory lock"]
+    lock --> dump["Create server-owned archive ID; run pg_dump in custom format"]
+    dump --> verify["Check archive with pg_restore --list"]
+    verify --> metadata["Record SHA-256, size, timestamp and pg_dump version"]
+    metadata --> release["Release database lock"]
+    release --> catalog["Record backup ID in source profile encrypted metadata"]
+    catalog --> result["Return backup ID and metadata"]
+    dump -.->|Creation fails| cleanup["Remove partial archive and metadata; release lock; return error"]
+    verify -.->|Creation fails| cleanup
+    metadata -.->|Creation fails| cleanup
+
+    classDef action fill:#571f2b,stroke:#571f2b,color:#ffffff
+    classDef boundary fill:#f5ebdd,stroke:#c78249,color:#2c2223
+    class dump,verify,catalog action
+    class request,result,cleanup boundary
+```
+
+Restore checks both the selected archive and the destination before executing
+the restore command:
+
+```mermaid
+flowchart TB
+    request["Select source backup and destination profile"] --> access["Check administrator permission and access to both profiles"]
+    access --> archive["Require backup ID recorded in source profile metadata"]
+    archive --> confirm["Require typed confirmation of destination profile name"]
+    confirm --> lock["Acquire destination database advisory lock"]
+    lock --> physical["BackupStore checks physical destination database name"]
+    physical --> verify["Verify archive SHA-256 and pg_restore --list"]
+    verify --> empty["Connect to existing destination; check that it is empty"]
+    empty --> restore["pg_restore: single transaction, exit on error, no owner or privileges"]
+    restore --> success{"Restore succeeded?"}
+    success -->|Yes| result["Release lock; return restored status, backup ID and database"]
+    success -->|No| failure["Transaction rolls back; release lock; return controlled error"]
+
+    classDef action fill:#571f2b,stroke:#571f2b,color:#ffffff
+    classDef boundary fill:#f5ebdd,stroke:#c78249,color:#2c2223
+    class verify,empty,restore action
+    class request,confirm,result,failure boundary
+```
+
+Each failed prerequisite stops the operation before the next step; any acquired
+lock is released when the operation exits. A failed lock acquisition does not
+start `pg_dump` or `pg_restore`. The lock coordinates cooperating DB Manager
+operations; external writers must be kept out of the destination separately.
+
+In the workbench, confirmation uses the **logical destination profile name**.
+Workbench then supplies the physical database name to `BackupStore`. Direct
+REST/MCP `restore` calls instead require `confirm_database` to match the
+**physical destination database name**. Neither path creates the database or
+uses `--clean` to overwrite an occupied destination.
+
+The empty-target check covers application objects beyond tables, including
+user schemas, large objects, non-default extensions and replication objects.
+Standalone archive verification performs the same checksum and readability
+checks without restoring data. It is not a test restore. Tool errors are
+reported without raw output that might expose credentials or database content.
+See [backup and restore](backups.md) for commands and limitations.
+
 ## Profiles, guides and privacy data
 
 The workbench separates registration (saving an authorized connection profile)

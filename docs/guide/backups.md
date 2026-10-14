@@ -1,5 +1,9 @@
 # Backup and restore
 
+See the [backup and restore flow diagrams](code-guide.md#backup-and-restore-flow)
+for workbench access checks, destination confirmation, archive verification and
+database locking.
+
 > **Version 0.2.0:** install the optional extras for UI, PostgreSQL and AI queries.
 > Gramlot and AI workflows remain beta features. See [availability](availability.md).
 
