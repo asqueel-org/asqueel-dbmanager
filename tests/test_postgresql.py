@@ -2,6 +2,7 @@
 
 import json
 import os
+from types import SimpleNamespace
 from uuid import uuid4
 
 import psycopg
@@ -10,8 +11,10 @@ from asqueel_migration import JsonStructureProducer
 from conftest import _request
 from psycopg import sql
 
-from asqueel_dbmanager import operations
+from asqueel_dbmanager import genropy, operations
+from asqueel_dbmanager.__main__ import main
 from asqueel_dbmanager.backups import BackupStore
+from asqueel_dbmanager.diagrams import diagram
 
 pytestmark = pytest.mark.postgresql
 
@@ -81,8 +84,108 @@ def test_http_plan_mcp_apply_and_idempotence(server, databases):
         **arguments, 'expected_plan': plan['plan_id'],
     })
     assert status == 409
-    assert 'items' in operations.introspect(connection, ['public'])['root']['schemas']['public']['tables']
+    snapshot = operations.introspect(connection, ['public'])
+    assert 'items' in snapshot['root']['schemas']['public']['tables']
+    assert 'public.items' in diagram(snapshot, format='dot')['content']
     assert operations.check_connection(connection)['connected']
+
+
+def test_introspect_discovers_user_schemas_when_omitted(databases):
+    connection = databases[0]
+    with psycopg.connect(**connection) as conn:
+        conn.execute('CREATE TABLE public.customers (id integer PRIMARY KEY)')
+        conn.execute('CREATE SCHEMA sales')
+        conn.execute('CREATE TABLE sales.invoices (customer_id integer REFERENCES public.customers)')
+    snapshot = operations.introspect(connection)
+    schemas = snapshot['root']['schemas']
+    assert set(schemas) == {'public', 'sales'}
+    assert 'customers' in schemas['public']['tables']
+    assert 'invoices' in schemas['sales']['tables']
+    result = diagram(snapshot, format='dot')
+    assert result['tables'] == 2 and result['relations'] == 1
+    limited = operations.introspect(connection, ['public'])
+    assert set(limited['root']['schemas']) == {'public'}
+    assert operations.introspect(connection, [])['root']['schemas'] == {}
+
+
+def test_query_read_is_parameterized_bounded_and_read_only(databases):
+    from asqueel_dbmanager.query_sql import ReadQueryError, execute_read
+
+    connection = databases[0]
+    with psycopg.connect(**connection) as conn:
+        conn.execute('CREATE TABLE public.states (code text PRIMARY KEY, name text)')
+        conn.execute('INSERT INTO public.states VALUES (%s,%s),(%s,%s)',
+                     ('QLD', 'Queensland', 'NSW', 'New South Wales'))
+        conn.execute("CREATE FUNCTION public.try_write() RETURNS integer LANGUAGE sql AS "
+                     "$$ INSERT INTO public.states VALUES ('XX','changed') RETURNING 1 $$")
+    sql = 'SELECT code, name FROM public.states ORDER BY code'
+    result = execute_read(connection, sql, {}, max_rows=1)
+    assert result == {'columns': ['code', 'name'], 'rows': [['NSW', 'New South Wales']],
+                      'truncated': True}
+    sql = 'SELECT name FROM public.states WHERE code=%(state)s'
+    assert execute_read(connection, sql, {'state': 'QLD'})['rows'] == [['Queensland']]
+    assert execute_read(connection, sql, {'state': "QLD' OR TRUE --"})['rows'] == []
+    # PostgreSQL itself enforces the read-only boundary.
+    with pytest.raises(ReadQueryError, match='read-only'):
+        execute_read(connection, 'SELECT public.try_write()', {})
+    for bad_sql in [
+        'DELETE FROM public.states',
+        'SELECT code FROM public.states; DELETE FROM public.states',
+        'SELECT 1) escaped; DELETE FROM public.states; SELECT 1 FROM (SELECT 1',
+        'WITH removed AS (DELETE FROM public.states RETURNING *) SELECT * FROM removed',
+    ]:
+        with pytest.raises(ReadQueryError):
+            execute_read(connection, bad_sql, {})
+    with pytest.raises(ReadQueryError) as error:
+        execute_read(connection, 'SELECT missing FROM public.states', {})
+    assert error.value.diagnostic['code'] == '42703'
+    with pytest.raises(ReadQueryError) as error:
+        execute_read(connection, sql, {})
+    assert error.value.diagnostic['code'] == 'PARAMETERS'
+    with psycopg.connect(**connection) as conn:
+        assert conn.execute('SELECT count(*) FROM public.states').fetchone()[0] == 2
+
+
+def test_postgresql_error_is_repaired_and_raw_diagnostics_are_not_exposed(databases, tmp_path):
+    from cryptography.fernet import Fernet
+
+    from asqueel_dbmanager.query_profiles import ConnectionCatalog
+    from asqueel_dbmanager.query_sessions import QuerySessions
+    from asqueel_dbmanager.query_sql import ReadQueryError, execute_read
+
+    connection = databases[0]
+    with psycopg.connect(**connection) as conn:
+        conn.execute('CREATE TABLE public.states (code text PRIMARY KEY, name text)')
+        conn.execute("INSERT INTO public.states VALUES ('QLD','Queensland')")
+        conn.execute("CREATE FUNCTION public.private_error() RETURNS integer LANGUAGE plpgsql AS "
+                     "$$ BEGIN RAISE EXCEPTION 'private-value-must-not-leak' USING ERRCODE='42703'; END $$")
+    with pytest.raises(ReadQueryError) as error:
+        execute_read(connection, 'SELECT public.private_error()', {})
+    assert 'private-value' not in json.dumps(error.value.diagnostic)
+    assert error.value.diagnostic == {'code': '42703', 'message': 'Undefined column'}
+
+    class Provider:
+        model = 'controlled-test'
+        def call(self, prefix, messages=None):
+            usage = {'cache_read_input_tokens': 2000}
+            if messages is None:
+                return None, usage
+            if len(messages) == 1:
+                return {'sql': 'SELECT nonexistent FROM public.states', 'params': {}}, usage
+            assert json.loads(messages[-1]['content'])['database_error']['code'] == '42703'
+            return {'sql': 'SELECT name FROM public.states', 'params': {}}, usage
+
+    catalog = ConnectionCatalog(tmp_path / 'db', Fernet.generate_key().decode())
+    catalog.save('states', connection)
+    manager = QuerySessions(catalog, Provider(), background=False)
+    try:
+        session_id = manager.open('states')['session_id']
+        result = manager.ask(session_id, 'Quali stati ci sono?', output='results')
+        assert result['result']['rows'] == [['Queensland']]
+        assert result['corrections'] == 1 and result['execution_attempts'] == 2
+        assert result['database_validated'] is True
+    finally:
+        manager.shutdown()
 
 
 def test_backup_restore_data_and_reject_nonempty_target(databases, tmp_path):
@@ -107,6 +210,34 @@ def test_backup_restore_data_and_reject_nonempty_target(databases, tmp_path):
         stream.write(b'corruption')
     with pytest.raises(ValueError, match='checksum'):
         store.verify(archive['backup_id'])
+
+
+def test_genropy_cli_introspection_and_restorable_backup(databases, tmp_path, monkeypatch, capsys):
+    source, target = databases
+    monkeypatch.delenv('GNR_DB_DSN', raising=False)
+    attrs = dict(source, implementation='postgres')
+    monkeypatch.setattr(genropy, '_instance_config',
+                        lambda name: SimpleNamespace(getAttr=lambda key: attrs))
+    with psycopg.connect(**source) as conn:
+        conn.execute('CREATE TABLE public.items (id integer PRIMARY KEY, title text)')
+        conn.execute('INSERT INTO public.items VALUES (%s, %s)', (1, 'Invoice 日本語'))
+    snapshot = tmp_path / 'structure.json'
+    main(['introspect', '-g', 'example', '-o', str(snapshot)])
+    structure = json.loads(snapshot.read_text())
+    assert 'items' in structure['root']['schemas']['public']['tables']
+    assert capsys.readouterr().out == ''
+    main(['diagram', str(snapshot), '--format', 'dot'])
+    assert 'public.items' in capsys.readouterr().out
+    root = tmp_path / 'archives'
+    main(['backup', '-g', 'example', '--backup-dir', str(root)])
+    metadata = json.loads(capsys.readouterr().out)
+    assert metadata['database'] == source['dbname']
+    assert not {'host', 'user', 'password', 'port'} & metadata.keys()
+    store = BackupStore(root)
+    assert store.verify(metadata['backup_id'])['verified']
+    assert store.restore(target, metadata['backup_id'], target['dbname'])['restored']
+    with psycopg.connect(**target) as conn:
+        assert conn.execute('SELECT * FROM public.items').fetchall() == [(1, 'Invoice 日本語')]
 
 
 def test_changed_database_rejects_reviewed_plan(databases):
@@ -188,3 +319,32 @@ def test_manager_lock_prevents_overlapping_mutations(databases):
         with pytest.raises(operations.DatabaseBusy):
             operations.apply(connection, desired(), plan['plan_id'])
     assert operations.apply(connection, desired(), plan['plan_id'])['verified']
+
+
+def test_workbench_registration_migration_backup_restore(databases, server, tmp_path, monkeypatch):
+    """The UI service uses the same reviewed operations on disposable databases."""
+    from cryptography.fernet import Fernet
+
+    from asqueel_dbmanager.query_profiles import QueryError
+
+    monkeypatch.setenv('ASQUEEL_DBMANAGER_DB_DIR', str(tmp_path / 'profiles'))
+    monkeypatch.setenv('ASQUEEL_DBMANAGER_STORAGE_KEY', Fernet.generate_key().decode())
+    app = server.application_at('')
+    def call(action, **data):
+        return app._workbench.call(action, data, 'local', True)
+    call('register', database='source', connection=databases[0])
+    call('register', database='target', connection=databases[1])
+    plan = call('plan', database='source', structure=desired())
+    assert plan['plan_id']
+    with pytest.raises(QueryError, match='Confirm'):
+        call('apply', database='source', structure=desired(), expected_plan=plan['plan_id'])
+    assert call('apply', database='source', structure=desired(), expected_plan=plan['plan_id'],
+                confirm_database='source')['verified']
+    archive = call('backup', database='source')
+    assert call('backups', database='source')['backups'][0]['backup_id'] == archive['backup_id']
+    assert call('backups', database='target')['backups'] == []
+    with pytest.raises(QueryError, match='unavailable'):
+        call('verify_backup', database='target', backup_id=archive['backup_id'])
+    call('restore', database='target', source_database='source', backup_id=archive['backup_id'],
+         confirm_database='target')
+    assert operations.plan(databases[1], desired())['empty']

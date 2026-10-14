@@ -1,4 +1,4 @@
-asqueel-migration
+asqueel-dbmanager
 Copyright 2025 Softwell S.r.l.
 
 This product includes software developed at
@@ -9,3 +9,9 @@ and has been extracted and relicensed to Apache License, Version 2.0
 as part of the Genro Modules ecosystem.
 
 Licensed under the Apache License, Version 2.0.
+
+The experimental diagram viewer bundles Cytoscape.js 3.34.3 (MIT License).
+Source: https://github.com/cytoscape/cytoscape.js
+Distribution: https://registry.npmjs.org/cytoscape/-/cytoscape-3.34.3.tgz
+The full upstream copyright and license are included in
+src/asqueel_dbmanager/static/cytoscape-LICENSE.txt.

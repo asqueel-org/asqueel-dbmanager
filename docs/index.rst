@@ -7,9 +7,9 @@ Asqueel DB Manager
 
 A PostgreSQL administration service for reviewed schema migrations,
 backups and restores, with REST and MCP access through Kajenn. The current
-local development checkout also includes a Gramlot workbench, interactive database
-diagrams and natural-language query sessions. Those additions are documented as a
-development preview and are not yet included in the public code or PyPI package.
+public source checkout also includes a Gramlot workbench, interactive database
+diagrams and natural-language query sessions. These beta additions are available
+on GitHub; install from source until a new PyPI release includes them.
 
 Start with the installation guide and the workbench's English **Getting started**
 page. Register a database, explore its structure, then choose maintenance or AI

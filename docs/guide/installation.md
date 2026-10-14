@@ -1,11 +1,12 @@
 # Install and run
 
-> **Version scope:** this manual includes development-preview additions.
-> UI, diagrams, Genropy CLI, query sessions and Kajenn profile authorization are
-> not yet in the public code or PyPI package. See [availability](availability.md).
+> **Source beta:** these features are available on the public GitHub branch.
+> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
+> package has not been updated yet. See [availability](availability.md).
 
 Requires Python 3.11+, `asqueel-migration` 0.2, and Kajenn 0.1.
-Install the PostgreSQL extra, which includes the database driver:
+For the full source beta, use the [GitHub installation](availability.md#install-all-current-features-from-github).
+For the earlier PyPI core, install the PostgreSQL extra, which includes the database driver:
 
 ```bash
 python -m venv .venv

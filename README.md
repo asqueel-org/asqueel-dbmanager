@@ -18,12 +18,12 @@ DB Manager is a [Kajenn](https://pypi.org/project/kajenn/) application powered b
 standalone server or import the application into an existing Kajenn server.
 
 [Read the manual](https://asqueel-dbmanager.readthedocs.io/en/latest/) ·
-[Availability and development preview](docs/guide/availability.md) ·
+[Availability and installation](docs/guide/availability.md) ·
 [Report an issue](https://github.com/asqueel-org/asqueel-dbmanager/issues)
 
 ## What is available
 
-| Area | Published core | Development preview |
+| Area | Core operations | Additional features on GitHub |
 | --- | --- | --- |
 | Database structure | Connection checks and introspection | Genropy legacy instance selection from the CLI |
 | Migrations | Review generated SQL, apply a bound plan, verify convergence | Guided workbench flow |
@@ -32,11 +32,25 @@ standalone server or import the application into an existing Kajenn server.
 | Diagrams | — | Graphviz layout, Cytoscape interaction, schema/relationship filters, keys and indexes |
 | Natural-language queries | — | Encrypted profiles, manual AI enrollment, database guides and SQL/read-only query sessions |
 
-**The preview implementation is currently in a local development checkout.**
-This documentation update does not publish that implementation or a new PyPI
-release. Installing from PyPI or cloning the public default branch does not yet
-provide the preview UI, diagram commands or query-session tools. The manual
-includes clearly marked preview guides so the upcoming workflows can be reviewed.
+**All features in the table are available in this repository.** The web
+workbench and query workflows remain beta features. The existing PyPI package
+contains the earlier core; install from source for the current functionality.
+
+## Install the current version from GitHub
+
+```bash
+git clone https://github.com/asqueel-org/asqueel-dbmanager.git
+cd asqueel-dbmanager
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[ui,queries,postgresql]'
+asqueel-dbmanager --ui --port 8000
+```
+
+Open **http://127.0.0.1:8000/ui/** for the English Getting started guide. Configure
+the encrypted catalog key before registering a database and provider credentials
+before AI queries; see [query sessions](docs/guide/queries.md). For an existing
+checkout, pull the updated branch and reinstall the extras above.
 
 ## Install and run the published core
 
@@ -70,7 +84,7 @@ Adjust the connection for your installation. Supply credentials in request
 bodies, never in URLs. See [installation](docs/guide/installation.md) and the
 [API reference](docs/guide/api.md) for composition and operation details.
 
-## Development preview: the web workbench
+## Gramlot web workbench (beta)
 
 The beta uses **Gramlot core and native HTML controls**, with navigation opening
 workspaces in iframes. Advanced Gramlot POC components are not dependencies.
@@ -102,11 +116,11 @@ is built from the English guides in this repository:
 
 - [Availability and scope](docs/guide/availability.md)
 - [Installation](docs/guide/installation.md)
-- [Gramlot workbench](docs/guide/workbench.md) — preview
+- [Gramlot workbench](docs/guide/workbench.md) — source beta
 - [Migrations](docs/guide/migrations.md)
-- [CLI and Genropy](docs/guide/cli.md) — preview
-- [Diagrams](docs/guide/diagrams.md) — preview
-- [AI query sessions](docs/guide/queries.md) — preview
+- [CLI and Genropy](docs/guide/cli.md) — source beta
+- [Diagrams](docs/guide/diagrams.md) — source beta
+- [AI query sessions](docs/guide/queries.md) — source beta
 - [Backup and restore](docs/guide/backups.md)
 - [REST and MCP](docs/guide/api.md)
 - [Deployment](docs/guide/deployment.md)
@@ -115,7 +129,7 @@ is built from the English guides in this repository:
 ## Access and operational limits
 
 The published core is for trusted local callers. Loopback is not authentication;
-do not expose it through a public proxy. The preview adds explicit Kajenn-hosted
+do not expose it through a public proxy. The source beta adds explicit Kajenn-hosted
 identity and profile access checks, without introducing a separate login system.
 See [access modes](docs/guide/workbench.md#access-modes).
 
@@ -128,7 +142,7 @@ have no automatic retention policy.
 ## Development
 
 ```bash
-python -m pip install -e '.[dev,postgresql,docs]'
+python -m pip install -e '.[dev,postgresql,ui,queries,docs]'
 ruff check src tests
 pytest -q
 python -m build

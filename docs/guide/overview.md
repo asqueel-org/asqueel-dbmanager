@@ -1,8 +1,8 @@
 # Overview
 
-> **Version scope:** this manual includes development-preview additions.
-> UI, diagrams, Genropy CLI, query sessions and Kajenn profile authorization are
-> not yet in the public code or PyPI package. See [availability](availability.md).
+> **Source beta:** these features are available on the public GitHub branch.
+> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
+> package has not been updated yet. See [availability](availability.md).
 
 DB Manager is the administration application in the Asqueel family. It connects
 to PostgreSQL, reads its schema, prepares a migration plan from a desired model,

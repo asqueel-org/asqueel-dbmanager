@@ -17,7 +17,7 @@ def test_generated_openapi_and_mcp_match(server):
     assert '/run_job' not in paths
     for name in _OPERATIONS:
         assert set(paths[f'/{name}']) == {'post'}
-        if name != 'backups':
+        if name not in {'backups', 'capabilities', 'databases'}:
             assert 'requestBody' in paths[f'/{name}']['post']
     status, body = _request(server, '/mcp', method='POST', payload={
         'jsonrpc': '2.0', 'id': 1, 'method': 'tools/list', 'params': {},
@@ -72,6 +72,7 @@ def test_error_does_not_reflect_credentials(server, monkeypatch):
     ('plan', {'connection': {'dbname': 'demo', 'password': 'private-secret'},
               'structure': {}, 'allow_removals': 'private-secret'}),
     ('introspect', {'connection': {'dbname': 'demo'}, 'schemas': [42, 'private-secret']}),
+    ('diagram', {'structure': ['private-secret']}),
 ])
 def test_invalid_arguments_never_reflect_input(server, endpoint, arguments):
     status, body = _request(server, f'/{endpoint}', method='POST', payload=arguments)

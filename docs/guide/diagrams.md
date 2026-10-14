@@ -1,8 +1,8 @@
 # Schema diagrams
 
-> **Development preview:** this guide describes the local beta, not the code
-> currently available from PyPI or the public default branch. See
-> [availability](availability.md) before using these commands.
+> **Source beta:** these features are available on the public GitHub branch.
+> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
+> package has not been updated yet. See [availability](availability.md).
 
 Generate a diagram directly from **normalized Asqueel Migration JSON**, such as
 the result of `introspect` or `JsonStructureProducer(...).get_json_struct()`.

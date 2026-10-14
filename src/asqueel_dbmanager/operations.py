@@ -71,6 +71,14 @@ def database_lock(connection):
 
 def introspect(connection, schemas=None):
     with database(connection, schemas) as db:
+        if schemas is None:
+            # Migration's reader requires explicit schemas; None reads no tables.
+            with db.adapter.connect() as conn:
+                schemas = [row[0] for row in conn.execute(
+                    "SELECT schema_name FROM information_schema.schemata "
+                    "WHERE schema_name <> 'information_schema' "
+                    "AND left(schema_name, 3) <> 'pg_' ORDER BY schema_name"
+                ).fetchall()]
         return db.adapter.reader.get_json_struct(db.get_dbname(), schemas=schemas)
 
 

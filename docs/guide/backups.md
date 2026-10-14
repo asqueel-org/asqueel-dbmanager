@@ -1,8 +1,8 @@
 # Backup and restore
 
-> **Version scope:** this manual includes development-preview additions.
-> UI, diagrams, Genropy CLI, query sessions and Kajenn profile authorization are
-> not yet in the public code or PyPI package. See [availability](availability.md).
+> **Source beta:** these features are available on the public GitHub branch.
+> Install from source for UI, diagrams, Genropy CLI and AI queries; the PyPI
+> package has not been updated yet. See [availability](availability.md).
 
 Archives are written beneath `ASQUEEL_DBMANAGER_BACKUP_DIR` (default
 `.dbmanager/backups`). Clients receive generated IDs, never choose server paths.

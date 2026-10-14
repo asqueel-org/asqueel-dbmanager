@@ -1,44 +1,52 @@
-# Availability and development preview
+# Availability and installation
 
-This manual covers both the published core and a development preview. Publishing
-the manual does not release the preview implementation.
+The default GitHub branch includes the implemented beta described in this manual.
+The latest documentation is built from that branch. Publication of this source
+code does not create a new PyPI release.
 
-## Published core
+## Install all current features from GitHub
 
-The public application provides PostgreSQL connection checks and introspection,
-reviewed migration plans and application, logical backup archives, archive
-verification, and restore into an existing empty database. It exposes REST,
-OpenAPI and MCP over HTTP and runs as a standalone Kajenn application. Legacy
-job submission and polling are also present.
+Requires Python 3.11+ and access to PostgreSQL:
 
-The basic PyPI installation in [installation](installation.md) applies to this
-core. It is intended for trusted local callers.
+```bash
+git clone https://github.com/asqueel-org/asqueel-dbmanager.git
+cd asqueel-dbmanager
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[ui,queries,postgresql]'
+asqueel-dbmanager --ui --port 8000
+```
 
-## Development preview documented here
+Open `http://127.0.0.1:8000/ui/`. The Getting started page explains registration,
+diagrams, maintenance and AI enrollment. When mounted at `dbmanager`, the URL
+is `/dbmanager/ui/`. Configure the encrypted catalog key before registration
+and provider credentials before AI queries; see [query sessions](queries.md).
 
-At this documentation publication, the following implementation exists in a local
-development checkout and has not been published to the default GitHub branch or
-released on PyPI:
+## Available in the source beta
 
-- Gramlot web workbench and its English Getting started page.
-- Encrypted database profiles and Genropy legacy registration.
-- Diagram generation, Graphviz layout and interactive Cytoscape viewers.
+- Gramlot web workbench and English Getting started instructions.
+- Encrypted PostgreSQL profiles and Genropy legacy instance registration.
+- Graphviz layout and interactive Cytoscape diagrams, filters and index details.
 - CLI introspection, diagrams and backup with Genropy instance selection.
+- Reviewed migrations, logical backup and restore through registered profiles.
 - AI query sessions, manual enrollment and database guide editing.
-- Explicit Kajenn-hosted identity and profile access checks.
+- Local access or explicit Kajenn-hosted authentication and profile allowlists.
 
-The [workbench](workbench.md), [CLI](cli.md), [diagrams](diagrams.md) and
-[query sessions](queries.md) guides document that preview. Commands using
-`--ui`, the `ui`/`queries` extras or the new subcommands require a checkout that
-contains their implementation. A fresh clone of the public branch or a PyPI
-installation does not yet supply them. Other guides mark sections or additions
-that describe preview behavior.
+The UI uses Gramlot core with native HTML controls while the framework evolves.
+These features are beta functionality; the guides describe their operational
+limits. See [workbench](workbench.md), [CLI](cli.md), [diagrams](diagrams.md) and
+[query sessions](queries.md).
 
-These pages describe implemented beta behavior, not a promise of production
-readiness. Update this availability page when the corresponding code is published
-and again when a package release makes it installable from PyPI.
+## PyPI package
 
-## Planned, not implemented in the preview
+The existing PyPI release contains the earlier core: PostgreSQL connection checks,
+introspection, reviewed migrations, logical backups and restores, REST, OpenAPI,
+MCP and legacy job endpoints. It does not yet contain the source beta above.
+Use the GitHub installation for the new features until a package release includes
+them. The basic PyPI command in [installation](installation.md) remains valid
+for that earlier core.
+
+## Planned, not implemented
 
 Automatic database explanations, Genropy package help import, lookup loading,
 `database_stats`, privacy-aware result encoding/decoding, AI charts and WAL/PITR

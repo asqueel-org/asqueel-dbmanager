@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive database diagram</title><link rel="stylesheet" href="assets/cytoscape-view.css">
+<script defer src="assets/cytoscape-3.34.3.min.js"></script><script defer src="assets/cytoscape-view.js"></script>
+</head><body>
+<header><div class="heading"><h1>__TITLE__</h1></div>
+<p id="summary">Loading graph…</p>
+<nav aria-label="Diagram controls">
+<button id="fit">Fit</button><button id="readable">Readable</button><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-level" aria-live="polite"></span>
+<button id="details-toggle" aria-expanded="false">Tables / details</button>
+</nav><details class="options"><summary>Layout &amp; export</summary><div class="options-row">
+<label>Layout <select id="layout-type"><option value="cose">Compact</option><option value="breadthfirst">Hierarchy</option><option value="grid">Grid</option></select></label>
+<button id="layout">Reset layout</button><label><input id="keys-only" type="checkbox"> Keys only</label>
+<button id="save">Save positions</button><button id="png">Download PNG</button>
+<a id="png-download" hidden download="diagram-cytoscape.png">Save PNG</a>
+</div></details><details class="options"><summary>Filters</summary><div class="filters">
+<label>Schema <select id="schema"><option value="">All schemas</option></select></label>
+<label>Cluster <select id="cluster"><option value="">All tables</option></select></label>
+<label>Relatives <select id="relatives"><option value="both">Both</option><option value="ancestors">Ancestors</option><option value="descendants">Descendants</option></select></label>
+<label>Depth <input id="depth" type="number" min="0" placeholder="All" aria-label="Cluster depth"></label>
+<button id="filter">Apply filters</button><button id="clear">Clear filters</button>
+</div></details></header>
+<main><div id="diagram-stage"><section id="cy" aria-label="Interactive diagram canvas"></section><div id="card-scroll-layer"></div></div>
+<aside><h2>Tables</h2><div id="tables"></div><h2 id="detail-title">Details</h2>
+<p id="hint">Drag a table header to move it. Scroll inside a table to see its columns. Select a table or relation for details. Filters apply to this snapshot.</p>
+<div id="details"></div></aside></main>
+<footer id="status" role="status">Positions stay in this browser only when saved.</footer>
+<script id="graph-data" type="application/json">__CONFIG__</script>
+</body></html>

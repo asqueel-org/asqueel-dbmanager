@@ -15,10 +15,14 @@ def _request(
     client='127.0.0.1',
     query=b'',
     payload=None,
+    include_headers=False,
+    auth=None,
+    request_headers=None,
 ):
     """Drive one HTTP request through the real ASGI stack."""
     body = json.dumps(payload).encode() if payload is not None else b''
     headers = [(b'content-type', b'application/json')] if payload is not None else []
+    headers.extend(request_headers or [])
 
     async def run():
         scope = {
@@ -29,6 +33,8 @@ def _request(
             'headers': headers,
             'client': (client, 12345),
         }
+        if auth is not None:
+            scope['auth'] = auth
         sent = []
 
         async def receive():
@@ -48,6 +54,14 @@ def _request(
             for message in sent
             if message['type'] == 'http.response.body'
         )
+        if include_headers:
+            raw_headers = next(message['headers'] for message in sent
+                               if message['type'] == 'http.response.start')
+            response_headers = dict(raw_headers)
+            cookies = [value for name, value in raw_headers if name == b'set-cookie']
+            if cookies:
+                response_headers[b'set-cookie'] = b'\n'.join(cookies)
+            return status, response_body, response_headers
         return status, response_body
 
     return asyncio.run(run())
