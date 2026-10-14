@@ -1,6 +1,6 @@
 # Availability and installation
 
-Version **0.2.0** includes the workbench, diagrams, Genropy integration and AI
+Version **0.2.1** includes the workbench, diagrams, Genropy integration and AI
 query sessions described in this manual. The UI and AI workflows remain beta
 features. Read the [release notes](release-notes.md) and [code guide](code-guide.md)
 for changes and implementation details.
@@ -10,12 +10,12 @@ for changes and implementation details.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install 'asqueel-dbmanager[ui,queries,postgresql]==0.2.0'
+python -m pip install 'asqueel-dbmanager[ui,queries,postgresql]==0.2.1'
 asqueel-dbmanager --ui --port 8000
 ```
 
 To upgrade an existing installation, run `python -m pip install --upgrade
-'asqueel-dbmanager[ui,queries,postgresql]>=0.2.0'`. Back up the encrypted profile
+'asqueel-dbmanager[ui,queries,postgresql]>=0.2.1'`. Back up the encrypted profile
 catalog together with its metadata and preserve access to its encryption key.
 No automatic database schema migration is performed by package installation.
 
@@ -37,7 +37,7 @@ diagrams, maintenance and AI enrollment. When mounted at `dbmanager`, the URL
 is `/dbmanager/ui/`. Configure the encrypted catalog key before registration
 and provider credentials before AI queries; see [query sessions](queries.md).
 
-## Included in 0.2.0
+## Included in 0.2.1
 
 - Gramlot web workbench and English Getting started instructions.
 - Encrypted PostgreSQL profiles and Genropy legacy instance registration.

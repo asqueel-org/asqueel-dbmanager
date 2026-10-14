@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.2.1
+
+Fix README documentation and license links to use absolute URLs, so they work
+on both PyPI and GitHub. No runtime behavior changes from 0.2.0.
+
 ## 0.2.0
 
 This release packages the workbench and workflows previously available from the

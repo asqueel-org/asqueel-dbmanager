@@ -18,7 +18,7 @@ DB Manager is a [Kajenn](https://pypi.org/project/kajenn/) application powered b
 standalone server or import the application into an existing Kajenn server.
 
 [Read the manual](https://asqueel-dbmanager.readthedocs.io/en/latest/) ·
-[Availability and installation](docs/guide/availability.md) ·
+[Availability and installation](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/availability.html) ·
 [Report an issue](https://github.com/asqueel-org/asqueel-dbmanager/issues)
 
 ## What is available
@@ -32,21 +32,21 @@ standalone server or import the application into an existing Kajenn server.
 | Diagrams | — | Graphviz layout, Cytoscape interaction, schema/relationship filters, keys and indexes |
 | Natural-language queries | — | Encrypted profiles, manual AI enrollment, database guides and SQL/read-only query sessions |
 
-**Version 0.2.0 includes all features in the table.** The web workbench and
-query workflows remain beta features. See the [release notes](docs/guide/release-notes.md)
-and the [code guide](docs/guide/code-guide.md) for architecture and implementation.
+**Version 0.2.1 includes all features in the table.** The web workbench and
+query workflows remain beta features. See the [release notes](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/release-notes.html)
+and the [code guide](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/code-guide.html) for architecture and implementation.
 
 ## Install from PyPI
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install 'asqueel-dbmanager[ui,queries,postgresql]==0.2.0'
+python -m pip install 'asqueel-dbmanager[ui,queries,postgresql]==0.2.1'
 asqueel-dbmanager --ui --port 8000
 ```
 
 Open **http://127.0.0.1:8000/ui/** and follow Getting started. To upgrade, use
-`python -m pip install --upgrade 'asqueel-dbmanager[ui,queries,postgresql]>=0.2.0'`.
+`python -m pip install --upgrade 'asqueel-dbmanager[ui,queries,postgresql]>=0.2.1'`.
 
 ## Install the current version from GitHub
 
@@ -61,7 +61,7 @@ asqueel-dbmanager --ui --port 8000
 
 Open **http://127.0.0.1:8000/ui/** for the English Getting started guide. Configure
 the encrypted catalog key before registering a database and provider credentials
-before AI queries; see [query sessions](docs/guide/queries.md). For an existing
+before AI queries; see [query sessions](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/queries.html). For an existing
 checkout, pull the updated branch and reinstall the extras above.
 
 ## Run the API and CLI without the UI
@@ -71,7 +71,7 @@ Requires Python 3.11+ and access to PostgreSQL:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install 'asqueel-dbmanager[postgresql]>=0.2.0'
+python -m pip install 'asqueel-dbmanager[postgresql]>=0.2.1'
 asqueel-dbmanager --port 8000
 ```
 
@@ -93,8 +93,8 @@ curl --fail-with-body http://127.0.0.1:8000/check_connection \
 ```
 
 Adjust the connection for your installation. Supply credentials in request
-bodies, never in URLs. See [installation](docs/guide/installation.md) and the
-[API reference](docs/guide/api.md) for composition and operation details.
+bodies, never in URLs. See [installation](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/installation.html) and the
+[API reference](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/api.html) for composition and operation details.
 
 ## Gramlot web workbench (beta)
 
@@ -109,7 +109,7 @@ workspaces in iframes. Advanced Gramlot POC components are not dependencies.
 - **AI Queries:** manual enrollment, approved database explanations and a chat
   returning SQL or bounded read-only results.
 
-The [workbench guide](docs/guide/workbench.md) contains setup instructions for
+The [workbench guide](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/workbench.html) contains setup instructions for
 checkouts that include the beta. Graphviz is optional for the interactive viewer
 and required for SVG generation; DOT export does not need its executable.
 AI queries require a configured Anthropic provider and an encrypted catalog key
@@ -126,26 +126,26 @@ Jobs are outside the new workbench scope; existing legacy job APIs remain docume
 The [Read the Docs manual](https://asqueel-dbmanager.readthedocs.io/en/latest/)
 is built from the English guides in this repository:
 
-- [Availability and scope](docs/guide/availability.md)
-- [Installation](docs/guide/installation.md)
-- [Gramlot workbench](docs/guide/workbench.md) — beta
-- [Migrations](docs/guide/migrations.md)
-- [CLI and Genropy](docs/guide/cli.md) — beta
-- [Diagrams](docs/guide/diagrams.md) — beta
-- [AI query sessions](docs/guide/queries.md) — beta
-- [Backup and restore](docs/guide/backups.md)
-- [REST and MCP](docs/guide/api.md)
-- [Deployment](docs/guide/deployment.md)
-- [Architecture and code guide](docs/guide/code-guide.md)
-- [Release notes](docs/guide/release-notes.md)
-- [Development and publishing](docs/guide/development.md)
+- [Availability and scope](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/availability.html)
+- [Installation](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/installation.html)
+- [Gramlot workbench](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/workbench.html) — beta
+- [Migrations](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/migrations.html)
+- [CLI and Genropy](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/cli.html) — beta
+- [Diagrams](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/diagrams.html) — beta
+- [AI query sessions](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/queries.html) — beta
+- [Backup and restore](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/backups.html)
+- [REST and MCP](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/api.html)
+- [Deployment](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/deployment.html)
+- [Architecture and code guide](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/code-guide.html)
+- [Release notes](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/release-notes.html)
+- [Development and publishing](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/development.html)
 
 ## Access and operational limits
 
 The default local mode is for trusted local callers. Loopback is not authentication;
-do not expose it through a public proxy. Version 0.2.0 supports explicit Kajenn-hosted
+do not expose it through a public proxy. Version 0.2.1 supports explicit Kajenn-hosted
 identity and profile access checks, without introducing a separate login system.
-See [access modes](docs/guide/workbench.md#access-modes).
+See [access modes](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/workbench.html#access-modes).
 
 Migration, backup and restore operations coordinate through PostgreSQL advisory
 locks in the `postgres` maintenance database. The database role needs access to
@@ -164,7 +164,7 @@ python -m sphinx -W --keep-going -b html docs docs/_build/html
 ```
 
 Integration tests use a temporary PostgreSQL server or a configured test server.
-See [development](docs/guide/development.md) for setup and release checks.
+See [development](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/development.html) for setup and release checks.
 
 Part of the [Asqueel organization](https://github.com/asqueel-org).
-Licensed under [Apache 2.0](LICENSE).
+Licensed under [Apache 2.0](https://github.com/asqueel-org/asqueel-dbmanager/blob/main/LICENSE).
