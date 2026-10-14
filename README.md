@@ -11,18 +11,36 @@
   <img src="https://raw.githubusercontent.com/asqueel-org/asqueel-dbmanager/main/assets/branding/asqueel-dbmanager-primary.svg" alt="Asqueel DB Manager" width="360">
 </picture>
 
-**PostgreSQL administration through REST and MCP: review schema migrations,
-create backups, restore copies and run background jobs.**
+**PostgreSQL administration through REST and MCP, with reviewed migrations and logical backups.**
 
-DB Manager is a [Kajenn](https://pypi.org/project/kajenn/) application. One set of
-typed routes produces OpenAPI documentation and MCP tools; long-running jobs use
-Kajenn's native task executor. Schema comparison and migration SQL come from
-[Asqueel Migration](https://github.com/asqueel-org/asqueel-migration), which remains
-usable independently of this server.
+DB Manager is a [Kajenn](https://pypi.org/project/kajenn/) application powered by
+[Asqueel Migration](https://github.com/asqueel-org/asqueel-migration). Run its
+standalone server or import the application into an existing Kajenn server.
 
-## Install and run
+[Read the manual](https://asqueel-dbmanager.readthedocs.io/en/latest/) ·
+[Availability and development preview](docs/guide/availability.md) ·
+[Report an issue](https://github.com/asqueel-org/asqueel-dbmanager/issues)
 
-Requires Python 3.11+ and PostgreSQL. Install the database driver extra:
+## What is available
+
+| Area | Published core | Development preview |
+| --- | --- | --- |
+| Database structure | Connection checks and introspection | Genropy legacy instance selection from the CLI |
+| Migrations | Review generated SQL, apply a bound plan, verify convergence | Guided workbench flow |
+| Backup and restore | Logical PostgreSQL archives, verification, restore into an existing empty database | Registered-profile workflow in the workbench |
+| Interfaces | REST, OpenAPI and MCP over HTTP | Gramlot web workbench with English operating instructions |
+| Diagrams | — | Graphviz layout, Cytoscape interaction, schema/relationship filters, keys and indexes |
+| Natural-language queries | — | Encrypted profiles, manual AI enrollment, database guides and SQL/read-only query sessions |
+
+**The preview implementation is currently in a local development checkout.**
+This documentation update does not publish that implementation or a new PyPI
+release. Installing from PyPI or cloning the public default branch does not yet
+provide the preview UI, diagram commands or query-session tools. The manual
+includes clearly marked preview guides so the upcoming workflows can be reviewed.
+
+## Install and run the published core
+
+Requires Python 3.11+ and access to PostgreSQL:
 
 ```bash
 python -m venv .venv
@@ -31,12 +49,16 @@ python -m pip install 'asqueel-dbmanager[postgresql]'
 asqueel-dbmanager --port 8000
 ```
 
-- Swagger UI: <http://127.0.0.1:8000/_meta/docs>
-- OpenAPI schema: <http://127.0.0.1:8000/_meta/schema_json>
-- MCP Streamable HTTP: <http://127.0.0.1:8000/mcp>
+The server binds to `127.0.0.1`:
 
-Backup and restore also require compatible `pg_dump` and `pg_restore` programs
-on the server's `PATH`. The CLI binds to `127.0.0.1`.
+| Interface | URL |
+| --- | --- |
+| Swagger UI | `http://127.0.0.1:8000/_meta/docs` |
+| OpenAPI | `http://127.0.0.1:8000/_meta/schema_json` |
+| MCP Streamable HTTP | `http://127.0.0.1:8000/mcp` |
+
+Backup and restore require compatible `pg_dump` and `pg_restore` executables on
+the server's `PATH`. PostgreSQL must already be running. Check an existing database:
 
 ```bash
 curl --fail-with-body http://127.0.0.1:8000/check_connection \
@@ -44,49 +66,64 @@ curl --fail-with-body http://127.0.0.1:8000/check_connection \
   -d '{"connection":{"host":"localhost","dbname":"demo","user":"postgres"}}'
 ```
 
-Adjust the connection to an existing database accessible to your account.
-See [installation](docs/guide/installation.md) for Python composition and setup.
+Adjust the connection for your installation. Supply credentials in request
+bodies, never in URLs. See [installation](docs/guide/installation.md) and the
+[API reference](docs/guide/api.md) for composition and operation details.
 
-## What it does
+## Development preview: the web workbench
 
-| Workflow | REST endpoints and MCP tools |
-| --- | --- |
-| Inspect connectivity and schema | `check_connection`, `introspect` |
-| Review SQL, then apply a bound plan and verify convergence | `plan`, `apply` |
-| Create, list and verify custom-format archives | `backup`, `backups`, `verify_backup` |
-| Restore into an explicitly confirmed empty database | `restore` |
-| Queue backup/restore and inspect the result | `submit`, `job` |
+The beta uses **Gramlot core and native HTML controls**, with navigation opening
+workspaces in iframes. Advanced Gramlot POC components are not dependencies.
 
-Every REST operation is a POST with a JSON body. Credentials never belong in
-URLs. Removals are disabled by default; apply requires the reviewed `plan_id` as
-`expected_plan`. A changed plan is rejected before execution.
+- **Getting started:** detailed English instructions, prerequisites and troubleshooting.
+- **Registration:** encrypted PostgreSQL profiles and Genropy legacy instances.
+- **Database diagram:** Graphviz initial layout when available, Cytoscape dragging
+  and zoom, filters by schema or related tables, and index/constraint details.
+- **Migrations and backup/restore:** reviewed operations using registered profiles.
+- **AI Queries:** manual enrollment, approved database explanations and a chat
+  returning SQL or bounded read-only results.
+
+The [workbench guide](docs/guide/workbench.md) contains setup instructions for
+checkouts that include the beta. Graphviz is optional for the interactive viewer
+and required for SVG generation; DOT export does not need its executable.
+AI queries require a configured Anthropic provider and an encrypted catalog key
+held in 1Password or supplied by the server environment.
+
+Query result rows are not sent to the model in this beta. The model receives
+structure, approved explanations, questions and SQL history. Privacy attributes
+are stored for future result encoding. Automatic guide generation, lookup loading,
+`database_stats`, AI charts and WAL/PITR orchestration remain future work.
+Jobs are outside the new workbench scope; existing legacy job APIs remain documented.
 
 ## Documentation
 
-Read the [developer manual on Read the Docs](https://asqueel-dbmanager.readthedocs.io/en/latest/)
-or browse the guides in this repository:
+The [Read the Docs manual](https://asqueel-dbmanager.readthedocs.io/en/latest/)
+is built from the English guides in this repository:
 
-- [Overview and current scope](docs/guide/overview.md)
+- [Availability and scope](docs/guide/availability.md)
 - [Installation](docs/guide/installation.md)
-- [Plan and apply migrations](docs/guide/migrations.md)
+- [Gramlot workbench](docs/guide/workbench.md) — preview
+- [Migrations](docs/guide/migrations.md)
+- [CLI and Genropy](docs/guide/cli.md) — preview
+- [Diagrams](docs/guide/diagrams.md) — preview
+- [AI query sessions](docs/guide/queries.md) — preview
 - [Backup and restore](docs/guide/backups.md)
-- [Background jobs and connection profiles](docs/guide/jobs.md)
-- [REST and MCP reference](docs/guide/api.md)
-- [Deployment, configuration and troubleshooting](docs/guide/deployment.md)
+- [REST and MCP](docs/guide/api.md)
+- [Deployment](docs/guide/deployment.md)
 - [Development and publishing](docs/guide/development.md)
 
-## Deployment scope
+## Access and operational limits
 
-Version 0.1 supports PostgreSQL and trusted local callers. HTTP and MCP reject
-non-loopback peers; loopback is not authentication. Do not proxy this service to
-untrusted remote users. Remote authentication and multi-user authorization are
-not implemented.
+The published core is for trusted local callers. Loopback is not authentication;
+do not expose it through a public proxy. The preview adds explicit Kajenn-hosted
+identity and profile access checks, without introducing a separate login system.
+See [access modes](docs/guide/workbench.md#access-modes).
 
-Migrations, backups and restores share a PostgreSQL advisory lock in the
-`postgres` maintenance database. The database role needs access to it; external
-DDL clients must coordinate separately. Restore requires an existing empty
-database and does not restore ownership/grants, cluster roles or point-in-time
-recovery. Archives have no automatic retention policy.
+Migration, backup and restore operations coordinate through PostgreSQL advisory
+locks in the `postgres` maintenance database. The database role needs access to
+it; external DDL clients must coordinate separately. Restore requires an existing
+empty database and does not restore ownership/grants or cluster roles. Archives
+have no automatic retention policy.
 
 ## Development
 
@@ -99,10 +136,7 @@ python -m sphinx -W --keep-going -b html docs docs/_build/html
 ```
 
 Integration tests use a temporary PostgreSQL server or a configured test server.
-See the [development guide](docs/guide/development.md) for environment variables,
-Read the Docs setup and release checks.
+See [development](docs/guide/development.md) for setup and release checks.
 
-Part of the [Asqueel organization](https://github.com/asqueel-org), alongside
-[Asqueel](https://github.com/asqueel-org/asqueel) and
-[Asqueel Migration](https://github.com/asqueel-org/asqueel-migration).
+Part of the [Asqueel organization](https://github.com/asqueel-org).
 Licensed under [Apache 2.0](LICENSE).

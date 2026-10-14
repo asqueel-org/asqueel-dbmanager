@@ -1,5 +1,9 @@
 # Development and releases
 
+> **Version scope:** this manual includes development-preview additions.
+> UI, diagrams, Genropy CLI, query sessions and Kajenn profile authorization are
+> not yet in the public code or PyPI package. See [availability](availability.md).
+
 ```bash
 python -m pip install -e '.[dev,postgresql]'
 ruff check src tests
@@ -12,6 +16,14 @@ configured by `GNR_TEST_PG_HOST`, `GNR_TEST_PG_PORT`, `GNR_TEST_PG_USER` and
 `GNR_TEST_PG_PASSWORD`. They create uniquely named temporary databases and remove
 them afterward. OpenAPI, MCP, native task execution, stale plans, migrations and
 backup/restoration of row data are covered.
+
+Install Graphviz to run the SVG integration tests (`brew install graphviz` on
+macOS, `apt-get install graphviz` on Debian/Ubuntu). These tests skip when `dot`
+is unavailable; CI installs it explicitly. Diagram tests also cover composite
+keys, cross-schema and self relations, text escaping, CLI and REST/MCP parity.
+Capability tests cover missing/broken Graphviz as well as valid SVG output.
+Composition tests mount the app alongside another root application, without a
+worker, and verify discovery, direct calls and the same request boundaries.
 
 Next extensions: additional database backends, authenticated remote deployment,
 archive retention and maintenance utilities. They belong to this manager;

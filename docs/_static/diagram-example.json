@@ -1,0 +1,270 @@
+{
+  "root": {
+    "entity": "db",
+    "entity_name": "Shop — database schema",
+    "schemas": {
+      "public": {
+        "entity": "schema",
+        "entity_name": "public",
+        "tables": {
+          "customers": {
+            "entity": "table",
+            "entity_name": "customers",
+            "attributes": {
+              "pkeys": "id"
+            },
+            "columns": {
+              "id": {
+                "entity": "column",
+                "entity_name": "id",
+                "attributes": {
+                  "dtype": "I",
+                  "notnull": "_auto_"
+                },
+                "schema_name": "public",
+                "table_name": "customers",
+                "column_name": "id"
+              },
+              "name": {
+                "entity": "column",
+                "entity_name": "name",
+                "attributes": {
+                  "dtype": "T",
+                  "notnull": true
+                },
+                "schema_name": "public",
+                "table_name": "customers",
+                "column_name": "name"
+              },
+              "email": {
+                "entity": "column",
+                "entity_name": "email",
+                "attributes": {
+                  "dtype": "T",
+                  "unique": true
+                },
+                "schema_name": "public",
+                "table_name": "customers",
+                "column_name": "email"
+              }
+            },
+            "relations": {},
+            "constraints": {},
+            "indexes": {},
+            "schema_name": "public",
+            "table_name": "customers"
+          },
+          "products": {
+            "entity": "table",
+            "entity_name": "products",
+            "attributes": {
+              "pkeys": "id"
+            },
+            "columns": {
+              "id": {
+                "entity": "column",
+                "entity_name": "id",
+                "attributes": {
+                  "dtype": "I",
+                  "notnull": "_auto_"
+                },
+                "schema_name": "public",
+                "table_name": "products",
+                "column_name": "id"
+              },
+              "name": {
+                "entity": "column",
+                "entity_name": "name",
+                "attributes": {
+                  "dtype": "T",
+                  "notnull": true
+                },
+                "schema_name": "public",
+                "table_name": "products",
+                "column_name": "name"
+              },
+              "price": {
+                "entity": "column",
+                "entity_name": "price",
+                "attributes": {
+                  "dtype": "N",
+                  "size": "12,2"
+                },
+                "schema_name": "public",
+                "table_name": "products",
+                "column_name": "price"
+              }
+            },
+            "relations": {},
+            "constraints": {},
+            "indexes": {},
+            "schema_name": "public",
+            "table_name": "products"
+          },
+          "orders": {
+            "entity": "table",
+            "entity_name": "orders",
+            "attributes": {
+              "pkeys": "id"
+            },
+            "columns": {
+              "id": {
+                "entity": "column",
+                "entity_name": "id",
+                "attributes": {
+                  "dtype": "I",
+                  "notnull": "_auto_"
+                },
+                "schema_name": "public",
+                "table_name": "orders",
+                "column_name": "id"
+              },
+              "customer_id": {
+                "entity": "column",
+                "entity_name": "customer_id",
+                "attributes": {
+                  "dtype": "I",
+                  "notnull": true
+                },
+                "schema_name": "public",
+                "table_name": "orders",
+                "column_name": "customer_id"
+              },
+              "ordered_at": {
+                "entity": "column",
+                "entity_name": "ordered_at",
+                "attributes": {
+                  "dtype": "DHZ"
+                },
+                "schema_name": "public",
+                "table_name": "orders",
+                "column_name": "ordered_at"
+              }
+            },
+            "relations": {
+              "fk_954b0f8e": {
+                "entity": "relation",
+                "entity_name": "fk_954b0f8e",
+                "attributes": {
+                  "related_schema": "public",
+                  "related_table": "customers",
+                  "related_columns": [
+                    "id"
+                  ],
+                  "constraint_type": "FOREIGN KEY",
+                  "columns": [
+                    "customer_id"
+                  ],
+                  "constraint_name": "fk_954b0f8e"
+                },
+                "schema_name": "public",
+                "table_name": "orders"
+              }
+            },
+            "constraints": {},
+            "indexes": {},
+            "schema_name": "public",
+            "table_name": "orders"
+          },
+          "order_lines": {
+            "entity": "table",
+            "entity_name": "order_lines",
+            "attributes": {
+              "pkeys": "order_id,line_no"
+            },
+            "columns": {
+              "order_id": {
+                "entity": "column",
+                "entity_name": "order_id",
+                "attributes": {
+                  "dtype": "I",
+                  "notnull": "_auto_"
+                },
+                "schema_name": "public",
+                "table_name": "order_lines",
+                "column_name": "order_id"
+              },
+              "line_no": {
+                "entity": "column",
+                "entity_name": "line_no",
+                "attributes": {
+                  "dtype": "I",
+                  "notnull": "_auto_"
+                },
+                "schema_name": "public",
+                "table_name": "order_lines",
+                "column_name": "line_no"
+              },
+              "product_id": {
+                "entity": "column",
+                "entity_name": "product_id",
+                "attributes": {
+                  "dtype": "I",
+                  "notnull": true
+                },
+                "schema_name": "public",
+                "table_name": "order_lines",
+                "column_name": "product_id"
+              },
+              "quantity": {
+                "entity": "column",
+                "entity_name": "quantity",
+                "attributes": {
+                  "dtype": "I"
+                },
+                "schema_name": "public",
+                "table_name": "order_lines",
+                "column_name": "quantity"
+              }
+            },
+            "relations": {
+              "fk_ce68081d": {
+                "entity": "relation",
+                "entity_name": "fk_ce68081d",
+                "attributes": {
+                  "related_schema": "public",
+                  "related_table": "orders",
+                  "related_columns": [
+                    "id"
+                  ],
+                  "constraint_type": "FOREIGN KEY",
+                  "columns": [
+                    "order_id"
+                  ],
+                  "constraint_name": "fk_ce68081d"
+                },
+                "schema_name": "public",
+                "table_name": "order_lines"
+              },
+              "fk_6dcc90b8": {
+                "entity": "relation",
+                "entity_name": "fk_6dcc90b8",
+                "attributes": {
+                  "related_schema": "public",
+                  "related_table": "products",
+                  "related_columns": [
+                    "id"
+                  ],
+                  "constraint_type": "FOREIGN KEY",
+                  "columns": [
+                    "product_id"
+                  ],
+                  "constraint_name": "fk_6dcc90b8"
+                },
+                "schema_name": "public",
+                "table_name": "order_lines"
+              }
+            },
+            "constraints": {},
+            "indexes": {},
+            "schema_name": "public",
+            "table_name": "order_lines"
+          }
+        },
+        "schema_name": "public"
+      }
+    },
+    "extensions": {},
+    "event_triggers": {}
+  }
+}

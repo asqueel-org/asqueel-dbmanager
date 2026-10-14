@@ -1,5 +1,9 @@
 # Background jobs
 
+This page documents existing legacy endpoints. Jobs are outside the current
+Gramlot workbench scope while Kajenn job integration is being defined. The
+workbench's [backup and restore workflow](workbench.md) uses direct operations.
+
 For asynchronous backup/restore, configure a JSON file of named connections:
 
 ```json

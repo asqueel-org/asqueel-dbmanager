@@ -5,26 +5,35 @@ Asqueel DB Manager
    :alt: Asqueel DB Manager
    :width: 360px
 
-A local PostgreSQL administration service for reviewed schema migrations,
-backups and restores. Kajenn exposes the same typed operations as REST endpoints
-and MCP tools, and runs background jobs through its native task executor.
+A PostgreSQL administration service for reviewed schema migrations,
+backups and restores, with REST and MCP access through Kajenn. The current
+local development checkout also includes a Gramlot workbench, interactive database
+diagrams and natural-language query sessions. Those additions are documented as a
+development preview and are not yet included in the public code or PyPI package.
 
-Start with the installation guide, inspect your database, then review a migration
-plan before applying it. Backup and restore guides cover both direct calls and
-queued jobs.
+Start with the installation guide and the workbench's English **Getting started**
+page. Register a database, explore its structure, then choose maintenance or AI
+enrollment. The workbench guide documents beta functionality and its limits.
+Legacy job endpoints remain documented separately; jobs are outside the current
+workbench scope.
 
 .. toctree::
    :maxdepth: 2
    :caption: Get started
 
    guide/overview
+   guide/availability
    guide/installation
 
 .. toctree::
    :maxdepth: 2
    :caption: Use DB Manager
 
+   guide/workbench
    guide/migrations
+   guide/cli
+   guide/diagrams
+   guide/queries
    guide/backups
    guide/jobs
 

@@ -1,5 +1,9 @@
 # Backup and restore
 
+> **Version scope:** this manual includes development-preview additions.
+> UI, diagrams, Genropy CLI, query sessions and Kajenn profile authorization are
+> not yet in the public code or PyPI package. See [availability](availability.md).
+
 Archives are written beneath `ASQUEEL_DBMANAGER_BACKUP_DIR` (default
 `.dbmanager/backups`). Clients receive generated IDs, never choose server paths.
 Completed metadata includes the original database name, timestamp, byte size,
@@ -21,6 +25,16 @@ publications/subscriptions. Use a freshly created database for restore.
 
 
 ## Create, list and verify an archive
+
+From the local CLI, resolve a Genropy instance's connection and create a backup:
+
+```bash
+asqueel-dbmanager backup -g test_invoice_pg --backup-dir ./backups
+```
+
+This executes synchronously and returns metadata as JSON on stdout. The optional
+`--backup-dir` overrides the configured store for this invocation. See the
+[CLI guide](cli.md) for requirements, archive paths and connection handling.
 
 Send these JSON bodies to the corresponding POST endpoints, or use the same
 arguments with their MCP tools:
