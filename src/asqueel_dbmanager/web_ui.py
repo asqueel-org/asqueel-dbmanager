@@ -68,7 +68,8 @@ class WebUI:
             media = 'application/json'
         elif path in {'runtime.js', 'workbench.js', 'workbench.css', 'index.js',
                       'databases.js', 'genropy.js', 'migrations.js', 'backups.js',
-                      'enrollment.js', 'guide.js', 'chat.js', 'diagram.js', 'home.js'}:
+                      'enrollment.js', 'guide.js', 'chat.js', 'diagram.js', 'home.js',
+                      'asqueel.js', 'asqueel.css'}:
             if method not in {'GET', 'HEAD'}:
                 raise HTTPException(405, 'Method Not Allowed')
             file = runtime_asset() if path == 'runtime.js' else PAGES / path
@@ -78,7 +79,7 @@ class WebUI:
             if method != 'GET':
                 raise HTTPException(405, 'Method Not Allowed')
             if path not in {'', 'index', 'databases', 'genropy', 'migrations', 'backups',
-                            'enrollment', 'guide', 'chat', 'diagram', 'home'}:
+                            'enrollment', 'guide', 'chat', 'diagram', 'home', 'asqueel'}:
                 raise HTTPException(404, 'Unknown page')
             if scope['path'] == '/ui':
                 await Response(content='', status_code=307,

@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- Optional Asqueel integration: select a registered server-side configuration,
+  inspect static configuration and constructed objects in side-by-side trees,
+  compare desired/current Migration JSON with synchronized expansion and diff
+  filtering, and preview/apply through the existing plan fingerprint and lock.
+  Available in the source checkout with `.[ui,asqueel]`; administrator-only.
+
 ## 0.2.1
 
 Fix README documentation and license links to use absolute URLs, so they work

@@ -4,7 +4,8 @@ from gramlot import Page as GramlotPage
 
 NAVIGATION = (
     ('Start here', (('home', 'Getting started'),)),
-    ('Registration', (('databases', 'Databases'), ('genropy', 'Genropy legacy instances'))),
+    ('Registration', (('databases', 'Databases'), ('genropy', 'Genropy legacy instances'),
+                      ('asqueel', 'Asqueel configurations'))),
     ('Operations', (('diagram', 'Database diagram'), ('migrations', 'Migrations'),
                     ('backups', 'Backup & restore'))),
     ('AI Queries', (('enrollment', 'Database enrollment'), ('guide', 'Database Guide'), ('chat', 'Chat'))),

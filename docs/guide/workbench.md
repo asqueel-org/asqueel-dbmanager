@@ -38,6 +38,11 @@ Existing profiles are not overwritten from the UI.
   encrypted catalog or calling a model. Return here from navigation at any time.
 - **Registration:** databases and Genropy legacy instances. Technical registration
   is separate from AI enrollment.
+- **Registration / Asqueel configurations (source checkout):** inspect an existing
+  Asqueel registration with Configuration Bag and constructed-object trees, then
+  compare desired/current Migration JSON and review/apply a guarded plan. Requires
+  the optional `asqueel` extra and administrator access. See
+  [Asqueel configurations](asqueel-configurations.md).
 - **Operations / Database diagram:** select a registered database and click
   **Draw / refresh** to introspect its current structure with Migration.
   The embedded Cytoscape viewer uses Graphviz for its initial layout when available,

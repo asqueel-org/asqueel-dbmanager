@@ -27,6 +27,11 @@ class Workbench:
     def call(self, action, data, owner, admin):
         if not isinstance(data, dict):
             raise QueryError('Expected operation arguments')
+        if action.startswith('asqueel_'):
+            if not admin:
+                raise QueryError('This operation requires the dbmanager_admin tag')
+            from .asqueel_configs import dispatch
+            return dispatch(action, data)
         if action in {'register', 'register_genropy', 'apply', 'backup', 'restore'} and not admin:
             raise QueryError('This operation requires the dbmanager_admin tag')
         if action == 'list':

@@ -34,9 +34,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client-16 graphviz
           echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
-      - run: python -m pip install -e '.[dev,postgresql,ui,queries]'
+      - run: python -m pip install -e '.[dev,postgresql,ui,queries,asqueel]'
       - run: python -m pip check
       - run: ruff check src tests
+      - run: node --test tests/js/asqueel.test.mjs
       - run: pytest -q
       - run: python -m build
       - name: Verify the installed wheel

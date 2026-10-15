@@ -38,6 +38,12 @@ and the [code guide](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/co
 
 ## Install from PyPI
 
+The source checkout additionally provides an
+[Asqueel configuration workspace](https://asqueel-dbmanager.readthedocs.io/en/latest/guide/asqueel-configurations.html)
+with configuration/object trees and desired/current migration comparison.
+Install from the repository with `python -m pip install -e '.[ui,asqueel]'`.
+This addition is not included in the 0.2.1 release below.
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate

@@ -444,6 +444,15 @@ snapshots have the separately documented administrator boundary.
 
 ## Gramlot pages and browser logic
 
+The source checkout adds `asqueel_configs.py`, an optional adapter to Asqueel's
+named registry, static Bag inspection, public live objects and physical Migration
+JSON projection. `Workbench` gates all `asqueel_*` actions on administrator
+access before loading recipes. `pages/asqueel.py`, `asqueel.js` and `asqueel.css`
+provide the two-tab tree viewer; migrations reuse `operations.plan()` and
+`operations.apply()` with freshly loaded configuration and reviewed identifiers.
+See [Asqueel configurations](asqueel-configurations.md) for its source-only status
+and exact operating contract.
+
 `WebUI` hosts `gramlot.server.GramlotFileServer`. It serves bootstrap/runtime
 assets, dispatches the Source protocol and restricts page/asset names to an
 allowlist. A private cookie and Kajenn identity jointly own a Gramlot page.

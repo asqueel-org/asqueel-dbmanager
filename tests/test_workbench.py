@@ -130,7 +130,7 @@ def test_gramlot_bootstrap_and_source(workbench):
 
     async def render():
         ui = app._web_ui.server
-        for name in ('index', 'home', 'databases', 'genropy', 'migrations', 'backups', 'enrollment', 'guide', 'chat', 'diagram'):
+        for name in ('index', 'home', 'databases', 'genropy', 'migrations', 'backups', 'enrollment', 'guide', 'chat', 'diagram', 'asqueel'):
             opened = await ui.open_page(name, owner='test', prefix='/dbmanager/ui')
             request = {'id': 'render', 'pageId': opened.page_id, 'contentType': 'source', 'name': 'main', 'params': {}}
             response = await ui.call(to_tytx(request), owner='test')

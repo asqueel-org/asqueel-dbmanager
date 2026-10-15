@@ -348,3 +348,40 @@ def test_workbench_registration_migration_backup_restore(databases, server, tmp_
     call('restore', database='target', source_database='source', backup_id=archive['backup_id'],
          confirm_database='target')
     assert operations.plan(databases[1], desired())['empty']
+
+
+def test_asqueel_registered_plan_apply_and_drift(databases, tmp_path, monkeypatch):
+    pytest.importorskip('asqueel')
+    from asqueel.registry import DatabaseRegistry
+    from test_asqueel_configs import RECIPE
+
+    from asqueel_dbmanager import asqueel_configs
+
+    connection = databases[0]
+    monkeypatch.setenv('DBMANAGER_TEST_DSN', psycopg.conninfo.make_conninfo(**connection))
+    monkeypatch.setenv('ASQUEEL_HOME', str(tmp_path / 'registry'))
+    folder = tmp_path / 'recipe'
+    folder.mkdir()
+    (folder / 'configure.py').write_text(RECIPE)
+    DatabaseRegistry().register('demo', folder)
+    with psycopg.connect(**connection, autocommit=True) as conn:
+        conn.execute('CREATE SCHEMA managed; CREATE TABLE managed.item (id bigint PRIMARY KEY)')
+        conn.execute('CREATE SCHEMA unrelated; CREATE TABLE unrelated.keep_me (id integer)')
+    compare = asqueel_configs.dispatch('asqueel_compare', {'configuration': 'demo'})
+    assert set(compare['current']['root']['schemas']) == {'managed'}
+    plan = asqueel_configs.dispatch('asqueel_plan', {'configuration': 'demo'})['plan']
+    assert 'title' in plan['sql']
+    with psycopg.connect(**connection, autocommit=True) as conn:
+        conn.execute('ALTER TABLE managed.item ADD COLUMN extra text')
+    from asqueel_migration import StaleMigrationPlan
+    with pytest.raises(StaleMigrationPlan):
+        asqueel_configs.dispatch('asqueel_apply', {'configuration': 'demo',
+            'confirm_configuration': 'demo', 'expected_plan': plan['plan_id']})
+    reviewed = asqueel_configs.dispatch('asqueel_plan', {'configuration': 'demo'})['plan']
+    result = asqueel_configs.dispatch('asqueel_apply', {'configuration': 'demo',
+        'confirm_configuration': 'demo', 'expected_plan': reviewed['plan_id']})
+    assert result['result']['verified']
+    assert asqueel_configs.dispatch('asqueel_plan', {'configuration': 'demo'})['plan']['empty']
+    with psycopg.connect(**connection) as conn:
+        assert conn.execute("SELECT to_regclass('unrelated.keep_me')").fetchone()[0]
+        assert conn.execute("SELECT title, extra FROM managed.item").fetchall() == []

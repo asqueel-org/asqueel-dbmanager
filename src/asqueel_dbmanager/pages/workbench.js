@@ -29,7 +29,7 @@ function mount() {
             if (!link) return;
             event.preventDefault();
             const key = link.dataset.pageLink;
-            if (key === 'diagram') navigation(true);
+            if (key === 'diagram' || key === 'asqueel') navigation(true);
             let frame = $(`frame-${key}`);
             if (!frame) {
                 frame = el('iframe'); frame.id = `frame-${key}`;
